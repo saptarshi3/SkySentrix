@@ -1,0 +1,134 @@
+{
+  "benchmark_type": "CLEAN_LEAKAGE_FREE_TEST_SET",
+  "total_test_runs": 33,
+  "overall_accuracy": 0.0909,
+  "macro_precision": 0.9174,
+  "macro_recall": 0.0909,
+  "macro_f1": 0.0152,
+  "per_class": {
+    "healthy": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    },
+    "injector_degradation": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    },
+    "misfire": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    },
+    "lubrication_problem": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    },
+    "overheating": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    },
+    "excessive_vibration": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    },
+    "combustion_instability": {
+      "precision": 0.091,
+      "recall": 1.0,
+      "f1": 0.167,
+      "test_runs": 3,
+      "correct_runs": 3
+    },
+    "sensor_drift": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    },
+    "sensor_failure": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    },
+    "fuel_system_degradation": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    },
+    "alternator_problem": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "test_runs": 3,
+      "correct_runs": 0
+    }
+  },
+  "confusion_matrix": {
+    "healthy": {
+      "combustion_instability": 3
+    },
+    "injector_degradation": {
+      "combustion_instability": 3
+    },
+    "misfire": {
+      "combustion_instability": 3
+    },
+    "lubrication_problem": {
+      "combustion_instability": 3
+    },
+    "overheating": {
+      "combustion_instability": 3
+    },
+    "excessive_vibration": {
+      "combustion_instability": 3
+    },
+    "combustion_instability": {
+      "combustion_instability": 3
+    },
+    "sensor_drift": {
+      "combustion_instability": 3
+    },
+    "sensor_failure": {
+      "combustion_instability": 3
+    },
+    "fuel_system_degradation": {
+      "combustion_instability": 3
+    },
+    "alternator_problem": {
+      "combustion_instability": 3
+    }
+  },
+  "comparisons": {
+    "old_historical_benchmark": {
+      "accuracy": 0.4,
+      "macro_f1": 0.325,
+      "flaw": "Only tested on 1 run per fault (10 runs total) with hardcoded seeds 700-709 and normal_endurance only."
+    },
+    "new_leakage_free_benchmark": {
+      "accuracy": 0.0909,
+      "macro_f1": 0.0152,
+      "rigor": "Tested across 33 independent runs (3 per class) with varied mission presets, unseen seeds, and varied severities."
+    }
+  }
+}

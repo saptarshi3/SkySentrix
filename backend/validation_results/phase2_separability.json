@@ -1,0 +1,472 @@
+{
+  "injector_degradation": {
+    "rpm_residual": {
+      "mean": -14.722,
+      "std": 1.575,
+      "min": -16.951,
+      "max": -12.371
+    },
+    "egt_residual": {
+      "mean": 8.226,
+      "std": 1.146,
+      "min": 6.601,
+      "max": 9.877
+    },
+    "cht_residual": {
+      "mean": -0.322,
+      "std": 1.251,
+      "min": -1.71,
+      "max": 2.657
+    },
+    "oil_temp_res": {
+      "mean": 15.009,
+      "std": 3.59,
+      "min": 8.644,
+      "max": 19.434
+    },
+    "oil_pres_res": {
+      "mean": -14.686,
+      "std": 2.773,
+      "min": -20.555,
+      "max": -11.383
+    },
+    "fuel_flow_res": {
+      "mean": -49.076,
+      "std": 5.056,
+      "min": -53.88,
+      "max": -32.477
+    },
+    "vibration_res": {
+      "mean": 9.027,
+      "std": 4.564,
+      "min": 2.78,
+      "max": 19.576
+    },
+    "manifold_res": {
+      "mean": 10.872,
+      "std": 1.998,
+      "min": 6.016,
+      "max": 14.017
+    },
+    "battery_res": {
+      "mean": -6.563,
+      "std": 2.53,
+      "min": -10.419,
+      "max": -0.795
+    },
+    "rpm_val": {
+      "mean": 1006.577,
+      "std": 46.991,
+      "min": 960.162,
+      "max": 1191.757
+    },
+    "egt_val": {
+      "mean": 595.482,
+      "std": 3.098,
+      "min": 589.083,
+      "max": 604.158
+    },
+    "vibration_val": {
+      "mean": 0.233,
+      "std": 0.024,
+      "min": 0.192,
+      "max": 0.298
+    },
+    "fuel_flow_val": {
+      "mean": 4.876,
+      "std": 0.641,
+      "min": 4.184,
+      "max": 7.203
+    },
+    "engine_eff": {
+      "mean": 0.504,
+      "std": 0.028,
+      "min": 0.459,
+      "max": 0.588
+    },
+    "egt_instability_pstdev": 3.098,
+    "rpm_instability_pct": 4.668,
+    "vibration_pstdev": 0.024,
+    "_diagnosis_vote": {
+      "combustion_instability": 27,
+      "sensor_drift": 3
+    },
+    "_predicted": "combustion_instability"
+  },
+  "misfire": {
+    "rpm_residual": {
+      "mean": -28.665,
+      "std": 2.442,
+      "min": -32.794,
+      "max": -25.431
+    },
+    "egt_residual": {
+      "mean": 8.74,
+      "std": 1.05,
+      "min": 6.921,
+      "max": 10.214
+    },
+    "cht_residual": {
+      "mean": 1.816,
+      "std": 2.224,
+      "min": -2.776,
+      "max": 5.118
+    },
+    "oil_temp_res": {
+      "mean": 15.676,
+      "std": 3.988,
+      "min": 8.523,
+      "max": 20.579
+    },
+    "oil_pres_res": {
+      "mean": -22.309,
+      "std": 3.487,
+      "min": -28.17,
+      "max": -17.103
+    },
+    "fuel_flow_res": {
+      "mean": -66.726,
+      "std": 3.292,
+      "min": -70.554,
+      "max": -55.646
+    },
+    "vibration_res": {
+      "mean": 22.639,
+      "std": 5.877,
+      "min": 13.366,
+      "max": 36.46
+    },
+    "manifold_res": {
+      "mean": 12.658,
+      "std": 2.414,
+      "min": 7.935,
+      "max": 17.457
+    },
+    "battery_res": {
+      "mean": -8.276,
+      "std": 2.786,
+      "min": -11.082,
+      "max": -3.604
+    },
+    "rpm_val": {
+      "mean": 845.703,
+      "std": 25.354,
+      "min": 792.941,
+      "max": 942.595
+    },
+    "egt_val": {
+      "mean": 591.827,
+      "std": 4.263,
+      "min": 584.504,
+      "max": 601.396
+    },
+    "vibration_val": {
+      "mean": 0.253,
+      "std": 0.024,
+      "min": 0.197,
+      "max": 0.294
+    },
+    "fuel_flow_val": {
+      "mean": 2.943,
+      "std": 0.541,
+      "min": 2.308,
+      "max": 5.265
+    },
+    "engine_eff": {
+      "mean": 0.457,
+      "std": 0.017,
+      "min": 0.45,
+      "max": 0.539
+    },
+    "egt_instability_pstdev": 4.263,
+    "rpm_instability_pct": 2.998,
+    "vibration_pstdev": 0.024,
+    "_diagnosis_vote": {
+      "sensor_drift": 6,
+      "misfire": 1,
+      "combustion_instability": 23
+    },
+    "_predicted": "combustion_instability"
+  },
+  "excessive_vibration": {
+    "rpm_residual": {
+      "mean": -17.802,
+      "std": 1.529,
+      "min": -20.284,
+      "max": -15.7
+    },
+    "egt_residual": {
+      "mean": 5.449,
+      "std": 1.445,
+      "min": 2.66,
+      "max": 7.92
+    },
+    "cht_residual": {
+      "mean": -5.298,
+      "std": 1.272,
+      "min": -7.466,
+      "max": -3.015
+    },
+    "oil_temp_res": {
+      "mean": 14.16,
+      "std": 3.225,
+      "min": 7.164,
+      "max": 18.407
+    },
+    "oil_pres_res": {
+      "mean": -17.079,
+      "std": 1.621,
+      "min": -20.323,
+      "max": -12.2
+    },
+    "fuel_flow_res": {
+      "mean": -64.501,
+      "std": 3.244,
+      "min": -67.887,
+      "max": -53.628
+    },
+    "vibration_res": {
+      "mean": 30.797,
+      "std": 8.425,
+      "min": 14.19,
+      "max": 43.522
+    },
+    "manifold_res": {
+      "mean": 12.706,
+      "std": 2.731,
+      "min": 5.867,
+      "max": 19.883
+    },
+    "battery_res": {
+      "mean": -6.737,
+      "std": 2.463,
+      "min": -10.43,
+      "max": -3.068
+    },
+    "rpm_val": {
+      "mean": 963.266,
+      "std": 43.949,
+      "min": 918.12,
+      "max": 1123.032
+    },
+    "egt_val": {
+      "mean": 583.126,
+      "std": 5.872,
+      "min": 573.163,
+      "max": 594.49
+    },
+    "vibration_val": {
+      "mean": 0.28,
+      "std": 0.027,
+      "min": 0.221,
+      "max": 0.326
+    },
+    "fuel_flow_val": {
+      "mean": 3.43,
+      "std": 0.559,
+      "min": 2.647,
+      "max": 5.145
+    },
+    "engine_eff": {
+      "mean": 0.573,
+      "std": 0.049,
+      "min": 0.476,
+      "max": 0.714
+    },
+    "egt_instability_pstdev": 5.872,
+    "rpm_instability_pct": 4.563,
+    "vibration_pstdev": 0.027,
+    "_diagnosis_vote": {
+      "combustion_instability": 30
+    },
+    "_predicted": "combustion_instability"
+  },
+  "combustion_instability": {
+    "rpm_residual": {
+      "mean": -21.155,
+      "std": 1.813,
+      "min": -24.018,
+      "max": -18.37
+    },
+    "egt_residual": {
+      "mean": 8.167,
+      "std": 1.522,
+      "min": 5.006,
+      "max": 10.272
+    },
+    "cht_residual": {
+      "mean": -1.888,
+      "std": 2.232,
+      "min": -5.397,
+      "max": 3.054
+    },
+    "oil_temp_res": {
+      "mean": 14.703,
+      "std": 1.694,
+      "min": 11.306,
+      "max": 16.99
+    },
+    "oil_pres_res": {
+      "mean": -18.358,
+      "std": 2.074,
+      "min": -21.809,
+      "max": -13.444
+    },
+    "fuel_flow_res": {
+      "mean": -66.22,
+      "std": 3.713,
+      "min": -69.071,
+      "max": -54.215
+    },
+    "vibration_res": {
+      "mean": 21.292,
+      "std": 5.741,
+      "min": 12.44,
+      "max": 32.404
+    },
+    "manifold_res": {
+      "mean": 12.2,
+      "std": 1.799,
+      "min": 8.79,
+      "max": 16.271
+    },
+    "battery_res": {
+      "mean": -7.263,
+      "std": 2.353,
+      "min": -10.513,
+      "max": -3.189
+    },
+    "rpm_val": {
+      "mean": 931.773,
+      "std": 37.986,
+      "min": 890.553,
+      "max": 1084.852
+    },
+    "egt_val": {
+      "mean": 593.858,
+      "std": 3.385,
+      "min": 586.775,
+      "max": 599.984
+    },
+    "vibration_val": {
+      "mean": 0.253,
+      "std": 0.028,
+      "min": 0.179,
+      "max": 0.325
+    },
+    "fuel_flow_val": {
+      "mean": 3.115,
+      "std": 0.578,
+      "min": 2.115,
+      "max": 4.938
+    },
+    "engine_eff": {
+      "mean": 0.488,
+      "std": 0.042,
+      "min": 0.45,
+      "max": 0.636
+    },
+    "egt_instability_pstdev": 3.385,
+    "rpm_instability_pct": 4.077,
+    "vibration_pstdev": 0.028,
+    "_diagnosis_vote": {
+      "combustion_instability": 11,
+      "sensor_drift": 19
+    },
+    "_predicted": "sensor_drift"
+  },
+  "fuel_system_degradation": {
+    "rpm_residual": {
+      "mean": -14.852,
+      "std": 1.547,
+      "min": -16.805,
+      "max": -11.544
+    },
+    "egt_residual": {
+      "mean": 6.7,
+      "std": 1.351,
+      "min": 4.713,
+      "max": 8.665
+    },
+    "cht_residual": {
+      "mean": -3.596,
+      "std": 2.538,
+      "min": -7.775,
+      "max": 1.115
+    },
+    "oil_temp_res": {
+      "mean": 14.174,
+      "std": 3.678,
+      "min": 6.778,
+      "max": 18.043
+    },
+    "oil_pres_res": {
+      "mean": -15.292,
+      "std": 1.635,
+      "min": -17.596,
+      "max": -12.285
+    },
+    "fuel_flow_res": {
+      "mean": -58.509,
+      "std": 3.866,
+      "min": -61.906,
+      "max": -45.416
+    },
+    "vibration_res": {
+      "mean": 5.514,
+      "std": 3.211,
+      "min": -1.743,
+      "max": 10.513
+    },
+    "manifold_res": {
+      "mean": 11.071,
+      "std": 2.106,
+      "min": 6.747,
+      "max": 16.075
+    },
+    "battery_res": {
+      "mean": -6.694,
+      "std": 2.454,
+      "min": -10.158,
+      "max": -1.122
+    },
+    "rpm_val": {
+      "mean": 1004.538,
+      "std": 42.026,
+      "min": 960.889,
+      "max": 1166.172
+    },
+    "egt_val": {
+      "mean": 588.354,
+      "std": 3.551,
+      "min": 581.189,
+      "max": 594.801
+    },
+    "vibration_val": {
+      "mean": 0.221,
+      "std": 0.018,
+      "min": 0.18,
+      "max": 0.25
+    },
+    "fuel_flow_val": {
+      "mean": 4.007,
+      "std": 0.562,
+      "min": 3.193,
+      "max": 6.238
+    },
+    "engine_eff": {
+      "mean": 0.555,
+      "std": 0.031,
+      "min": 0.504,
+      "max": 0.667
+    },
+    "egt_instability_pstdev": 3.551,
+    "rpm_instability_pct": 4.184,
+    "vibration_pstdev": 0.018,
+    "_diagnosis_vote": {
+      "combustion_instability": 9,
+      "sensor_drift": 21
+    },
+    "_predicted": "sensor_drift"
+  }
+}

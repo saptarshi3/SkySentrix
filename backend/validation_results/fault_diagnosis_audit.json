@@ -1,0 +1,245 @@
+{
+  "generated_at": "2026-09-06T14:33:44Z",
+  "config": {
+    "warmup_sec": 60,
+    "duration_sec": 180,
+    "severity": 0.75,
+    "progression_per_sec": 0.01,
+    "stabilization_window": 30,
+    "confidence_threshold_for_latency": 0.5
+  },
+  "per_fault_results": [
+    {
+      "fault_type": "injector_degradation",
+      "predicted_fault": "misfire",
+      "correct": false,
+      "final_window_vote": {
+        "misfire": 23,
+        "sensor_drift": 7
+      },
+      "diagnosis_confidence_at_end": 0.99,
+      "detection_latency_sec": null,
+      "first_anomaly_latency_sec": 99,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    },
+    {
+      "fault_type": "misfire",
+      "predicted_fault": "misfire",
+      "correct": true,
+      "final_window_vote": {
+        "misfire": 30
+      },
+      "diagnosis_confidence_at_end": 0.99,
+      "detection_latency_sec": 25,
+      "first_anomaly_latency_sec": 56,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    },
+    {
+      "fault_type": "lubrication_problem",
+      "predicted_fault": "misfire",
+      "correct": false,
+      "final_window_vote": {
+        "misfire": 29,
+        "sensor_drift": 1
+      },
+      "diagnosis_confidence_at_end": 0.6619,
+      "detection_latency_sec": 42,
+      "first_anomaly_latency_sec": 89,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    },
+    {
+      "fault_type": "overheating",
+      "predicted_fault": "overheating",
+      "correct": true,
+      "final_window_vote": {
+        "sensor_drift": 2,
+        "overheating": 28
+      },
+      "diagnosis_confidence_at_end": 0.99,
+      "detection_latency_sec": 39,
+      "first_anomaly_latency_sec": 90,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    },
+    {
+      "fault_type": "excessive_vibration",
+      "predicted_fault": "excessive_vibration",
+      "correct": true,
+      "final_window_vote": {
+        "excessive_vibration": 19,
+        "misfire": 11
+      },
+      "diagnosis_confidence_at_end": 0.99,
+      "detection_latency_sec": 29,
+      "first_anomaly_latency_sec": 94,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    },
+    {
+      "fault_type": "combustion_instability",
+      "predicted_fault": "misfire",
+      "correct": false,
+      "final_window_vote": {
+        "misfire": 25,
+        "excessive_vibration": 5
+      },
+      "diagnosis_confidence_at_end": 0.6474,
+      "detection_latency_sec": 0,
+      "first_anomaly_latency_sec": 91,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    },
+    {
+      "fault_type": "fuel_system_degradation",
+      "predicted_fault": "misfire",
+      "correct": false,
+      "final_window_vote": {
+        "misfire": 28,
+        "sensor_drift": 2
+      },
+      "diagnosis_confidence_at_end": 0.99,
+      "detection_latency_sec": null,
+      "first_anomaly_latency_sec": 98,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    },
+    {
+      "fault_type": "alternator_problem",
+      "predicted_fault": "misfire",
+      "correct": false,
+      "final_window_vote": {
+        "sensor_drift": 6,
+        "misfire": 24
+      },
+      "diagnosis_confidence_at_end": 0.767,
+      "detection_latency_sec": 28,
+      "first_anomaly_latency_sec": 63,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    },
+    {
+      "fault_type": "sensor_drift",
+      "predicted_fault": "misfire",
+      "correct": false,
+      "final_window_vote": {
+        "sensor_drift": 5,
+        "misfire": 25
+      },
+      "diagnosis_confidence_at_end": 0.99,
+      "detection_latency_sec": 37,
+      "first_anomaly_latency_sec": 94,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    },
+    {
+      "fault_type": "sensor_failure",
+      "predicted_fault": "sensor_failure",
+      "correct": true,
+      "final_window_vote": {
+        "sensor_failure": 30
+      },
+      "diagnosis_confidence_at_end": 0.674,
+      "detection_latency_sec": 50,
+      "first_anomaly_latency_sec": 57,
+      "max_confidence_observed": 0.99,
+      "final_severity": 0.7484
+    }
+  ],
+  "confusion_matrix": {
+    "injector_degradation": {
+      "misfire": 1
+    },
+    "misfire": {
+      "misfire": 1
+    },
+    "lubrication_problem": {
+      "misfire": 1
+    },
+    "overheating": {
+      "overheating": 1
+    },
+    "excessive_vibration": {
+      "excessive_vibration": 1
+    },
+    "combustion_instability": {
+      "misfire": 1
+    },
+    "fuel_system_degradation": {
+      "misfire": 1
+    },
+    "alternator_problem": {
+      "misfire": 1
+    },
+    "sensor_drift": {
+      "misfire": 1
+    },
+    "sensor_failure": {
+      "sensor_failure": 1
+    }
+  },
+  "per_label_metrics": {
+    "injector_degradation": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "misfire": {
+      "precision": 0.143,
+      "recall": 1.0,
+      "f1": 0.25
+    },
+    "lubrication_problem": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "overheating": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "excessive_vibration": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "combustion_instability": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "fuel_system_degradation": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "alternator_problem": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "sensor_drift": {
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "sensor_failure": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "accuracy": 0.4,
+  "macro_f1": 0.325,
+  "correctly_identified_count": 4,
+  "total_faults_tested": 10,
+  "mean_detection_latency_sec": 31.25,
+  "faults_with_no_detection": [
+    "injector_degradation",
+    "fuel_system_degradation"
+  ],
+  "elapsed_sec": 40.3
+}

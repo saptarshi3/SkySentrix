@@ -1,0 +1,373 @@
+{
+  "model_type": "ExtraTrees_300",
+  "hyperparameters": {
+    "bootstrap": false,
+    "ccp_alpha": 0.0,
+    "class_weight": "balanced",
+    "criterion": "gini",
+    "max_depth": 18,
+    "max_features": "sqrt",
+    "max_leaf_nodes": null,
+    "max_samples": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 2,
+    "min_samples_split": 4,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "n_estimators": 300,
+    "n_jobs": -1,
+    "oob_score": false,
+    "random_state": 42,
+    "verbose": 0,
+    "warm_start": false
+  },
+  "classes": [
+    "alternator_problem",
+    "combustion_instability",
+    "excessive_vibration",
+    "fuel_system_degradation",
+    "healthy",
+    "injector_degradation",
+    "lubrication_problem",
+    "misfire",
+    "overheating",
+    "sensor_drift",
+    "sensor_failure"
+  ],
+  "feature_count": 39,
+  "feature_names": [
+    "res_rpm_pct",
+    "res_egt_pct",
+    "res_cht_pct",
+    "res_oil_p_pct",
+    "res_oil_t_pct",
+    "res_fuel_pct",
+    "res_vib_pct",
+    "res_batt_pct",
+    "res_map_pct",
+    "rpm_abs_res",
+    "egt_pos_res",
+    "cht_pos_res",
+    "oil_p_neg_res",
+    "oil_t_pos_res",
+    "vib_pos_res",
+    "batt_neg_res",
+    "fuel_pos_res",
+    "fuel_neg_res",
+    "rpm_instability",
+    "egt_instability",
+    "vib_instability",
+    "oil_p_instability",
+    "egt_res_slope",
+    "oil_p_res_slope",
+    "cht_res_slope",
+    "ratio_oil_p_drop_to_rpm_drop",
+    "ratio_cht_to_egt",
+    "ratio_vib_to_rpm_instab",
+    "ratio_fuel_to_rpm_res",
+    "air_fuel_ratio_dev",
+    "ratio_egt_shift_to_var",
+    "sensor_flatline_detected",
+    "single_channel_dominance",
+    "drift_persistence_votes",
+    "throttle",
+    "engine_load",
+    "altitude",
+    "ambient_temp",
+    "engine_efficiency"
+  ],
+  "random_seed": 42,
+  "training_date": "2026-09-10T18:04:36Z",
+  "dataset_info": {
+    "train_samples": 11880,
+    "train_runs": 99,
+    "val_samples": 3960,
+    "val_runs": 33,
+    "test_samples": 3960,
+    "test_runs": 33
+  },
+  "group_kfold_cv_metrics": {
+    "RandomForest_300": {
+      "acc_mean": 0.4524035087719298,
+      "acc_std": 0.021280738816299567,
+      "prec_mean": 0.44234073502663585,
+      "prec_std": 0.029772066483218625,
+      "rec_mean": 0.40431060606060604,
+      "rec_std": 0.021457728534631314,
+      "f1_mean": 0.4108298002182987,
+      "f1_std": 0.029779667146559694,
+      "time_sec": 8.545285701751709
+    },
+    "ExtraTrees_300": {
+      "acc_mean": 0.41368421052631577,
+      "acc_std": 0.022232961874683824,
+      "prec_mean": 0.4132684264077745,
+      "prec_std": 0.029069927798727652,
+      "rec_mean": 0.3626439393939394,
+      "rec_std": 0.017589016681023566,
+      "f1_mean": 0.37475389896036054,
+      "f1_std": 0.025239636450941225,
+      "time_sec": 5.515414714813232
+    },
+    "HistGradientBoosting": {
+      "acc_mean": 0.4265657894736842,
+      "acc_std": 0.03500830816398832,
+      "prec_mean": 0.41125267374487356,
+      "prec_std": 0.04307348901219131,
+      "rec_mean": 0.37655303030303033,
+      "rec_std": 0.04629539194096818,
+      "f1_mean": 0.3799525759983694,
+      "f1_std": 0.04628903963166584,
+      "time_sec": 53.248719930648804
+    }
+  },
+  "validation_metrics": {
+    "sample_acc": 0.8166666666666667,
+    "macro_prec": 0.8367888450498334,
+    "macro_rec": 0.839375,
+    "macro_f1": 0.8301789661441162,
+    "weighted_f1": 0.8265463440422526,
+    "run_acc": 0.8787878787878788,
+    "run_correct": 29,
+    "run_total": 33,
+    "fit_time_sec": 2.6685965061187744
+  },
+  "test_metrics": {
+    "accuracy": 0.8444,
+    "macro_precision": 0.8838,
+    "macro_recall": 0.874,
+    "macro_f1": 0.8669,
+    "weighted_f1": 0.8551,
+    "run_level_accuracy": 0.9091,
+    "per_class": {
+      "alternator_problem": {
+        "precision": 0.9932,
+        "recall": 0.97,
+        "f1": 0.9815,
+        "support": 300
+      },
+      "combustion_instability": {
+        "precision": 0.8598,
+        "recall": 0.92,
+        "f1": 0.8889,
+        "support": 300
+      },
+      "excessive_vibration": {
+        "precision": 0.913,
+        "recall": 0.91,
+        "f1": 0.9115,
+        "support": 300
+      },
+      "fuel_system_degradation": {
+        "precision": 0.8576,
+        "recall": 0.9033,
+        "f1": 0.8799,
+        "support": 300
+      },
+      "healthy": {
+        "precision": 0.9292,
+        "recall": 0.6969,
+        "f1": 0.7964,
+        "support": 960
+      },
+      "injector_degradation": {
+        "precision": 0.9582,
+        "recall": 0.9167,
+        "f1": 0.937,
+        "support": 300
+      },
+      "lubrication_problem": {
+        "precision": 0.9552,
+        "recall": 0.9233,
+        "f1": 0.939,
+        "support": 300
+      },
+      "misfire": {
+        "precision": 0.9656,
+        "recall": 0.8433,
+        "f1": 0.9004,
+        "support": 300
+      },
+      "overheating": {
+        "precision": 0.9793,
+        "recall": 0.9467,
+        "f1": 0.9627,
+        "support": 300
+      },
+      "sensor_drift": {
+        "precision": 0.417,
+        "recall": 0.9133,
+        "f1": 0.5726,
+        "support": 300
+      },
+      "sensor_failure": {
+        "precision": 0.8933,
+        "recall": 0.67,
+        "f1": 0.7657,
+        "support": 300
+      }
+    },
+    "confusion_matrix": {
+      "alternator_problem": {
+        "alternator_problem": 291,
+        "combustion_instability": 1,
+        "excessive_vibration": 2,
+        "fuel_system_degradation": 2,
+        "healthy": 2,
+        "injector_degradation": 0,
+        "lubrication_problem": 0,
+        "misfire": 0,
+        "overheating": 0,
+        "sensor_drift": 0,
+        "sensor_failure": 2
+      },
+      "combustion_instability": {
+        "alternator_problem": 0,
+        "combustion_instability": 276,
+        "excessive_vibration": 5,
+        "fuel_system_degradation": 5,
+        "healthy": 2,
+        "injector_degradation": 1,
+        "lubrication_problem": 1,
+        "misfire": 8,
+        "overheating": 0,
+        "sensor_drift": 2,
+        "sensor_failure": 0
+      },
+      "excessive_vibration": {
+        "alternator_problem": 0,
+        "combustion_instability": 0,
+        "excessive_vibration": 273,
+        "fuel_system_degradation": 1,
+        "healthy": 2,
+        "injector_degradation": 0,
+        "lubrication_problem": 3,
+        "misfire": 0,
+        "overheating": 0,
+        "sensor_drift": 15,
+        "sensor_failure": 6
+      },
+      "fuel_system_degradation": {
+        "alternator_problem": 0,
+        "combustion_instability": 8,
+        "excessive_vibration": 0,
+        "fuel_system_degradation": 271,
+        "healthy": 1,
+        "injector_degradation": 6,
+        "lubrication_problem": 0,
+        "misfire": 1,
+        "overheating": 2,
+        "sensor_drift": 10,
+        "sensor_failure": 1
+      },
+      "healthy": {
+        "alternator_problem": 0,
+        "combustion_instability": 0,
+        "excessive_vibration": 3,
+        "fuel_system_degradation": 3,
+        "healthy": 669,
+        "injector_degradation": 0,
+        "lubrication_problem": 2,
+        "misfire": 0,
+        "overheating": 4,
+        "sensor_drift": 267,
+        "sensor_failure": 12
+      },
+      "injector_degradation": {
+        "alternator_problem": 1,
+        "combustion_instability": 0,
+        "excessive_vibration": 0,
+        "fuel_system_degradation": 24,
+        "healthy": 0,
+        "injector_degradation": 275,
+        "lubrication_problem": 0,
+        "misfire": 0,
+        "overheating": 0,
+        "sensor_drift": 0,
+        "sensor_failure": 0
+      },
+      "lubrication_problem": {
+        "alternator_problem": 0,
+        "combustion_instability": 0,
+        "excessive_vibration": 2,
+        "fuel_system_degradation": 0,
+        "healthy": 6,
+        "injector_degradation": 1,
+        "lubrication_problem": 277,
+        "misfire": 0,
+        "overheating": 0,
+        "sensor_drift": 13,
+        "sensor_failure": 1
+      },
+      "misfire": {
+        "alternator_problem": 0,
+        "combustion_instability": 35,
+        "excessive_vibration": 2,
+        "fuel_system_degradation": 5,
+        "healthy": 1,
+        "injector_degradation": 4,
+        "lubrication_problem": 0,
+        "misfire": 253,
+        "overheating": 0,
+        "sensor_drift": 0,
+        "sensor_failure": 0
+      },
+      "overheating": {
+        "alternator_problem": 0,
+        "combustion_instability": 0,
+        "excessive_vibration": 2,
+        "fuel_system_degradation": 0,
+        "healthy": 2,
+        "injector_degradation": 0,
+        "lubrication_problem": 3,
+        "misfire": 0,
+        "overheating": 284,
+        "sensor_drift": 9,
+        "sensor_failure": 0
+      },
+      "sensor_drift": {
+        "alternator_problem": 1,
+        "combustion_instability": 0,
+        "excessive_vibration": 4,
+        "fuel_system_degradation": 1,
+        "healthy": 18,
+        "injector_degradation": 0,
+        "lubrication_problem": 0,
+        "misfire": 0,
+        "overheating": 0,
+        "sensor_drift": 274,
+        "sensor_failure": 2
+      },
+      "sensor_failure": {
+        "alternator_problem": 0,
+        "combustion_instability": 1,
+        "excessive_vibration": 6,
+        "fuel_system_degradation": 4,
+        "healthy": 17,
+        "injector_degradation": 0,
+        "lubrication_problem": 4,
+        "misfire": 0,
+        "overheating": 0,
+        "sensor_drift": 67,
+        "sensor_failure": 201
+      }
+    }
+  },
+  "top_feature_importances": {
+    "oil_p_neg_res": 0.0561,
+    "egt_pos_res": 0.053,
+    "engine_efficiency": 0.0524,
+    "res_oil_p_pct": 0.0513,
+    "res_batt_pct": 0.0512,
+    "batt_neg_res": 0.0468,
+    "res_egt_pct": 0.0462,
+    "res_rpm_pct": 0.0423,
+    "rpm_abs_res": 0.0402,
+    "vib_pos_res": 0.0372,
+    "fuel_neg_res": 0.036,
+    "res_fuel_pct": 0.035,
+    "single_channel_dominance": 0.0327,
+    "res_vib_pct": 0.0311,
+    "throttle": 0.0241
+  }
+}

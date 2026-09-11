@@ -1,0 +1,42 @@
+{
+  "version": "anomaly_v2_calibrated",
+  "trained_at": "2026-09-06T05:38:17.487328+00:00",
+  "training_source": "simulator_calibration",
+  "training_samples": 3540,
+  "contamination": 0.02,
+  "weights": {
+    "iforest": 0.34,
+    "residual": 0.34,
+    "ewma": 0.32,
+    "bias": -0.3
+  },
+  "thresholds": {
+    "warning": 0.28,
+    "critical": 0.55
+  },
+  "feature_names": [
+    "residual_rpm_pct",
+    "residual_cht_pct",
+    "residual_egt_pct",
+    "residual_oil_pressure_pct",
+    "residual_oil_temp_pct",
+    "residual_fuel_flow_pct",
+    "residual_vibration_pct",
+    "residual_battery_voltage_pct",
+    "residual_manifold_pressure_pct",
+    "residual_torque_nm_pct",
+    "rpm_delta",
+    "egt_delta",
+    "vibration_delta",
+    "rpm_rolling_std",
+    "throttle",
+    "engine_load",
+    "altitude_norm",
+    "ambient_temp_norm",
+    "density_ratio",
+    "engine_efficiency",
+    "regime_code"
+  ],
+  "n_estimators": 220,
+  "seed": 42
+}

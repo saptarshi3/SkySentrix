@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PipelineFrame",
+  "type": "object",
+  "description": "Shared backend->frontend payload contract for live telemetry and analytics.",
+  "required": [
+    "mission_id",
+    "sequence",
+    "telemetry",
+    "expected",
+    "residuals",
+    "anomaly",
+    "diagnosis",
+    "health",
+    "rul",
+    "maintenance"
+  ],
+  "properties": {
+    "mission_id": { "type": ["integer", "null"] },
+    "sequence": { "type": "integer" },
+    "telemetry": { "type": "object" },
+    "expected": { "type": "object" },
+    "residuals": { "type": "object" },
+    "anomaly": { "type": "object" },
+    "diagnosis": { "type": "object" },
+    "health": { "type": "object" },
+    "rul": { "type": "object" },
+    "maintenance": { "type": "object" },
+    "active_faults": { "type": "object" },
+    "sim_time_sec": { "type": "number" },
+    "mission_elapsed_sec": { "type": "number" },
+    "mission_duration_sec": { "type": "number" }
+  }
+}

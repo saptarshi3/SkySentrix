@@ -1,0 +1,11 @@
+True_Fault,injector_degradation,misfire,lubrication_problem,overheating,excessive_vibration,combustion_instability,fuel_system_degradation,alternator_problem,sensor_drift,sensor_failure,normal
+injector_degradation,0,0,0,0,0,1,0,0,0,0,0
+misfire,0,0,0,0,1,0,0,0,0,0,0
+lubrication_problem,0,0,1,0,0,0,0,0,0,0,0
+overheating,0,0,0,1,0,0,0,0,0,0,0
+excessive_vibration,0,0,0,0,1,0,0,0,0,0,0
+combustion_instability,0,0,0,0,1,0,0,0,0,0,0
+fuel_system_degradation,0,1,0,0,0,0,0,0,0,0,0
+alternator_problem,0,0,0,0,0,0,0,1,0,0,0
+sensor_drift,0,0,0,0,0,0,1,0,0,0,0
+sensor_failure,0,0,1,0,0,0,0,0,0,0,0
