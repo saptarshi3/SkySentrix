@@ -688,17 +688,39 @@ body {
 
 .engine-controls-bar {
   position: absolute;
-  bottom: 12px;
+  bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 4px;
   z-index: 10;
-  background: rgba(8, 12, 20, 0.85);
+  background: rgba(8, 12, 20, 0.90);
   border: 1px solid var(--border-default);
   border-radius: 6px;
-  padding: 4px;
+  padding: 3px 6px;
   backdrop-filter: blur(8px);
+}
+
+/* Multi-View angle preset selector positioned safely above bottom toolbar */
+div:has(> .engine-ctrl-btn):not(.engine-controls-bar) {
+  bottom: 52px !important;
+  left: 12px !important;
+}
+
+@media (max-width: 1500px) {
+  .engine-controls-bar {
+    padding: 3px 4px;
+    gap: 2px;
+  }
+  .engine-ctrl-btn {
+    padding: 4px 8px;
+    font-size: 10.5px;
+    gap: 4px;
+  }
+  .engine-ctrl-btn svg {
+    width: 13px;
+    height: 13px;
+  }
 }
 
 .engine-ctrl-btn {

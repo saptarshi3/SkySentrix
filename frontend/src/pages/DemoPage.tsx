@@ -481,11 +481,11 @@ export function DemoPage() {
       </header>
 
       {/* 2. Main Content Grid (Split 55% 3D Engine / 45% Command Telemetry) */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.2fr 1fr', minHeight: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.25fr 1fr', minHeight: 0, overflow: 'hidden' }}>
         {/* Left Side: Visual Digital Twin & What Is Happening Timeline */}
-        <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-default)', minHeight: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-default)', minHeight: 0, overflow: 'hidden' }}>
           {/* Top Half: 3D Engine Viewport */}
-          <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(ellipse at center, #0f1a2c 0%, #080c14 100%)', minHeight: 280 }}>
+          <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(ellipse at center, #0f1a2c 0%, #080c14 100%)', minHeight: 300, overflow: 'hidden' }}>
             <EngineScene frame={rawFrame} isConnected={connected} />
 
             {/* Subsystem Glow Tag overlay */}
@@ -538,6 +538,8 @@ export function DemoPage() {
               flexDirection: 'column',
               padding: '10px 16px 12px',
               flexShrink: 0,
+              position: 'relative',
+              zIndex: 2,
             }}
           >
             {/* Header with Pipeline Context */}
@@ -751,11 +753,11 @@ export function DemoPage() {
         {/* Right Side: Command Controls & Analytical Proof */}
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflowY: 'auto' }}>
           {/* Section A: Live AI Diagnosis & Diagnostic Intelligence */}
-          <div style={{ padding: '12px 16px', background: 'var(--bg-panel-alt)', borderBottom: '1px solid var(--border-default)' }}>
+          <div style={{ padding: '8px 14px 6px', background: 'var(--bg-panel-alt)', borderBottom: '1px solid var(--border-default)' }}>
             {/* 4 Core Diagnostic KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               {/* 1. Anomaly Score */}
-              <div style={{ padding: '9px 12px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
+              <div style={{ padding: '7px 10px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Anomaly Score
@@ -784,7 +786,7 @@ export function DemoPage() {
                     {current?.anomaly_level ?? 'NOMINAL'}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 2 }}>
                   <span
                     style={{
                       fontSize: 20,
@@ -801,13 +803,13 @@ export function DemoPage() {
                     {current ? (current.anomaly_score * 100).toFixed(1) : '0.0'}%
                   </span>
                 </div>
-                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 1 }}>
                   Ensemble deviation
                 </div>
               </div>
 
               {/* 2. Diagnosed Fault / Primary Prediction */}
-              <div style={{ padding: '9px 12px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
+              <div style={{ padding: '7px 10px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Model Prediction
@@ -823,7 +825,7 @@ export function DemoPage() {
                     fontSize: 14,
                     fontWeight: 700,
                     color: current?.diagnosis_fault && current.diagnosis_fault !== 'normal' ? 'var(--orange-400)' : 'var(--green-400)',
-                    marginTop: 4,
+                    marginTop: 2,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -834,13 +836,13 @@ export function DemoPage() {
                     ? current.diagnosis_fault.replace(/_/g, ' ').toUpperCase()
                     : 'NO ACTIVE FAULT'}
                 </div>
-                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
+                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 1, fontFamily: 'var(--font-mono)' }}>
                   Conf: {current ? (current.diagnosis_confidence * 100).toFixed(0) : '0'}%
                 </div>
               </div>
 
               {/* 3. Engine Health & Degradation */}
-              <div style={{ padding: '9px 12px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
+              <div style={{ padding: '7px 10px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Engine Health
@@ -849,7 +851,7 @@ export function DemoPage() {
                     Deg: {current ? current.degradation_index.toFixed(1) : '0.0'}%
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
                   <span
                     style={{
                       fontSize: 20,
@@ -866,13 +868,13 @@ export function DemoPage() {
                     {current ? current.health_index.toFixed(1) : '100.0'}%
                   </span>
                 </div>
-                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 1 }}>
                   Operating integrity
                 </div>
               </div>
 
               {/* 4. Estimated RUL */}
-              <div style={{ padding: '9px 12px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
+              <div style={{ padding: '7px 10px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Estimated RUL
@@ -891,12 +893,12 @@ export function DemoPage() {
                     {current?.rul_trend ?? 'STABLE'}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
                   <span style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--blue-400)' }}>
                     {current ? current.rul_hours.toFixed(0) : '480'}h
                   </span>
                 </div>
-                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 1 }}>
                   Time-to-limit margin
                 </div>
               </div>
@@ -906,20 +908,20 @@ export function DemoPage() {
             {current?.diagnosis_explanation && (
               <div
                 style={{
-                  marginTop: 10,
-                  padding: '10px 14px',
+                  marginTop: 7,
+                  padding: '7px 12px',
                   background: 'rgba(11, 18, 32, 0.85)',
                   borderRadius: 6,
                   border: '1px solid var(--border-default)',
                   borderLeft: '3px solid var(--orange-500)',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--orange-400)', letterSpacing: '0.06em' }}>
                       WHY THIS PREDICTION?
                     </span>
-                    <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: 9.5, color: 'var(--text-muted)' }}>
                       Diagnostic Evidence & Pattern Consensus
                     </span>
                   </div>
@@ -928,16 +930,16 @@ export function DemoPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {diagnosisDetails.probability && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase' }}>PROBABILITY:</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--orange-400)' }}>
+                        <span style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase' }}>PROBABILITY:</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--orange-400)' }}>
                           {diagnosisDetails.probability}
                         </span>
                       </div>
                     )}
                     {diagnosisDetails.consensus && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TEMPORAL CONSENSUS:</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--blue-400)' }}>
+                        <span style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TEMPORAL CONSENSUS:</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--blue-400)' }}>
                           {diagnosisDetails.consensus}
                         </span>
                       </div>
@@ -947,17 +949,17 @@ export function DemoPage() {
 
                 {/* Dominant Observed Indicators Chips */}
                 {diagnosisDetails.indicators.length > 0 && (
-                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)' }}>
+                  <div style={{ marginTop: 5, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)' }}>
                       DOMINANT OBSERVED INDICATORS:
                     </span>
                     {diagnosisDetails.indicators.map((ind) => (
                       <span
                         key={ind.key}
                         style={{
-                          fontSize: 10,
+                          fontSize: 9.5,
                           fontWeight: 600,
-                          padding: '2px 8px',
+                          padding: '1.5px 7px',
                           borderRadius: 4,
                           background: 'rgba(249, 115, 22, 0.12)',
                           color: 'var(--orange-300)',
@@ -972,7 +974,7 @@ export function DemoPage() {
                 )}
 
                 {/* Full Explanation Text */}
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 6, lineHeight: 1.4 }}>
+                <div style={{ fontSize: 10.5, color: 'var(--text-secondary)', marginTop: 5, lineHeight: 1.35 }}>
                   {current.diagnosis_explanation}
                 </div>
               </div>
@@ -980,8 +982,8 @@ export function DemoPage() {
           </div>
 
           {/* Section B: Operator Control Center */}
-          <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border-default)', background: 'var(--bg-panel)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--border-default)', background: 'var(--bg-panel)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
                 OPERATOR SIMULATION CONSOLE
               </span>
@@ -992,9 +994,9 @@ export function DemoPage() {
                     background: 'linear-gradient(135deg, var(--orange-600), var(--orange-500))',
                     color: 'white',
                     border: 'none',
-                    padding: '4px 12px',
+                    padding: '3px 10px',
                     borderRadius: 4,
-                    fontSize: 10.5,
+                    fontSize: 10,
                     fontWeight: 700,
                     cursor: 'pointer',
                     boxShadow: '0 2px 8px var(--orange-glow)',
@@ -1008,9 +1010,9 @@ export function DemoPage() {
                     background: running ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)',
                     color: running ? 'var(--red-400)' : 'var(--green-400)',
                     border: `1px solid ${running ? 'rgba(239, 68, 68, 0.4)' : 'rgba(34, 197, 94, 0.4)'}`,
-                    padding: '4px 10px',
+                    padding: '3px 9px',
                     borderRadius: 4,
-                    fontSize: 10.5,
+                    fontSize: 10,
                     fontWeight: 600,
                     cursor: 'pointer',
                   }}
@@ -1023,9 +1025,9 @@ export function DemoPage() {
                     background: 'var(--bg-card)',
                     color: 'var(--text-secondary)',
                     border: '1px solid var(--border-subtle)',
-                    padding: '4px 10px',
+                    padding: '3px 9px',
                     borderRadius: 4,
-                    fontSize: 10.5,
+                    fontSize: 10,
                     cursor: 'pointer',
                   }}
                 >
@@ -1042,13 +1044,13 @@ export function DemoPage() {
                 gap: 8,
                 alignItems: 'end',
                 background: 'var(--bg-card)',
-                padding: 10,
+                padding: '6px 8px',
                 borderRadius: 6,
                 border: '1px solid var(--border-subtle)',
               }}
             >
               <div>
-                <label style={{ fontSize: 9.5, color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>
+                <label style={{ fontSize: 9, color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>
                   Fault Profile
                 </label>
                 <select
@@ -1059,9 +1061,9 @@ export function DemoPage() {
                     background: 'var(--bg-surface)',
                     border: '1px solid var(--border-default)',
                     color: 'var(--text-primary)',
-                    padding: '4px 8px',
+                    padding: '3px 6px',
                     borderRadius: 4,
-                    fontSize: 11,
+                    fontSize: 10.5,
                   }}
                 >
                   {faultTypes.map((ft) => (
@@ -1073,7 +1075,7 @@ export function DemoPage() {
               </div>
 
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text-muted)' }}>
                   <span>Severity</span>
                   <span style={{ color: 'var(--orange-400)', fontFamily: 'var(--font-mono)' }}>{severityPct}%</span>
                 </div>
@@ -1084,12 +1086,12 @@ export function DemoPage() {
                   step={5}
                   value={severityPct}
                   onChange={(e) => setSeverityPct(Number(e.target.value))}
-                  style={{ width: '100%', accentColor: 'var(--orange-500)', marginTop: 4 }}
+                  style={{ width: '100%', accentColor: 'var(--orange-500)', marginTop: 2 }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 9.5, color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>
+                <label style={{ fontSize: 9, color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>
                   Progression / Sec
                 </label>
                 <input
@@ -1104,9 +1106,9 @@ export function DemoPage() {
                     background: 'var(--bg-surface)',
                     border: '1px solid var(--border-default)',
                     color: 'var(--text-primary)',
-                    padding: '4px 6px',
+                    padding: '3px 6px',
                     borderRadius: 4,
-                    fontSize: 11,
+                    fontSize: 10.5,
                   }}
                 />
               </div>
@@ -1118,12 +1120,12 @@ export function DemoPage() {
                   background: 'var(--orange-500)',
                   color: 'white',
                   border: 'none',
-                  padding: '6px 12px',
+                  padding: '4px 10px',
                   borderRadius: 4,
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: 600,
                   cursor: isInjecting ? 'not-allowed' : 'pointer',
-                  height: 28,
+                  height: 26,
                 }}
               >
                 INJECT FAULT
@@ -1131,9 +1133,9 @@ export function DemoPage() {
             </div>
 
             {/* Operating Environmental Sliders */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr) auto', gap: 10, marginTop: 8, alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr) auto', gap: 8, marginTop: 6, alignItems: 'end' }}>
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text-muted)' }}>
                   <span>Throttle</span>
                   <span style={{ color: 'var(--orange-400)' }}>{(throttleVal * 100).toFixed(0)}%</span>
                 </div>
@@ -1149,7 +1151,7 @@ export function DemoPage() {
               </div>
 
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text-muted)' }}>
                   <span>Altitude</span>
                   <span style={{ color: 'var(--text-secondary)' }}>{altitudeVal} m</span>
                 </div>
@@ -1165,7 +1167,7 @@ export function DemoPage() {
               </div>
 
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text-muted)' }}>
                   <span>Ambient Temp</span>
                   <span style={{ color: 'var(--text-secondary)' }}>{ambientTempVal}°C</span>
                 </div>
@@ -1186,11 +1188,11 @@ export function DemoPage() {
                   background: 'var(--bg-card)',
                   color: 'var(--text-primary)',
                   border: '1px solid var(--border-default)',
-                  padding: '4px 10px',
+                  padding: '3px 8px',
                   borderRadius: 4,
-                  fontSize: 10,
+                  fontSize: 9.5,
                   cursor: 'pointer',
-                  height: 26,
+                  height: 24,
                 }}
               >
                 APPLY CONDITIONS
@@ -1199,15 +1201,15 @@ export function DemoPage() {
 
             {/* Active Fault Status Chips */}
             {activeFaultList.length > 0 && (
-              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)' }}>ACTIVE FAULTS:</span>
+              <div style={{ marginTop: 5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 8.5, fontWeight: 700, color: 'var(--text-muted)' }}>ACTIVE FAULTS:</span>
                 {activeFaultList.map(([key, val]) => (
                   <span
                     key={key}
                     style={{
-                      fontSize: 9.5,
+                      fontSize: 9,
                       fontWeight: 600,
-                      padding: '2px 6px',
+                      padding: '1.5px 5px',
                       borderRadius: 3,
                       background: 'rgba(239,68,68,0.15)',
                       color: 'var(--red-400)',
@@ -1543,8 +1545,8 @@ export function DemoPage() {
               return (
                 <div
                   style={{
-                    margin: '8px 16px 14px',
-                    padding: '12px 14px',
+                    margin: '6px 14px 10px',
+                    padding: '9px 12px',
                     borderRadius: 6,
                     background: cardBg,
                     border: `1px solid ${borderCol}`,
