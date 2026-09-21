@@ -286,6 +286,44 @@ export function DemoPage() {
 
   const activeFaultList = running ? Object.entries(current?.active_faults || {}) : []
 
+  // Parse diagnosis explanation components for dedicated presentation
+  const diagnosisDetails = useMemo(() => {
+    const rawExp = current?.diagnosis_explanation || ''
+    // Patterns from backend diagnosis.py:
+    // "Model prediction: <readable/healthy> (probability: XX.X%, temporal consensus: XX%). Dominant observed indicators: ... / Operating state is nominal..."
+    const probMatch = rawExp.match(/probability:\s*([0-9.]+%?)/i)
+    const consensusMatch = rawExp.match(/temporal consensus:\s*([0-9.]+%?)/i)
+    const indicatorsMatch = rawExp.match(/Dominant observed indicators:\s*([^.]+)/i)
+
+    const probability = probMatch ? probMatch[1] : (current?.diagnosis_confidence ? `${(current.diagnosis_confidence * 100).toFixed(1)}%` : null)
+    const consensus = consensusMatch ? consensusMatch[1] : null
+    
+    // Parse list of dominant indicators
+    let indicators: { label: string; key: string }[] = []
+    if (indicatorsMatch && indicatorsMatch[1]) {
+      indicators = indicatorsMatch[1]
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => Boolean(s) && !s.includes('aggregate residual signature'))
+        .map(s => ({
+          key: s,
+          label: s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+        }))
+    } else if (current?.contributing_parameters && current.contributing_parameters.length > 0) {
+      indicators = current.contributing_parameters.map(s => ({
+        key: s,
+        label: s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      }))
+    }
+
+    return {
+      probability,
+      consensus,
+      indicators,
+      rawExplanation: rawExp,
+    }
+  }, [current?.diagnosis_explanation, current?.diagnosis_confidence, current?.contributing_parameters])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-base)', overflow: 'hidden' }}>
       {/* 1. Aerospace Mission Control Header */}
@@ -490,42 +528,88 @@ export function DemoPage() {
             )}
           </div>
 
-          {/* Bottom Half: "WHAT IS HAPPENING?" Judge-Facing Timeline */}
+          {/* Bottom Half: "WHAT IS HAPPENING?" Diagnostic Progression Timeline */}
           <div
             style={{
-              height: 180,
+              height: 195,
               background: 'var(--bg-panel)',
               borderTop: '1px solid var(--border-default)',
               display: 'flex',
               flexDirection: 'column',
-              padding: '10px 14px',
+              padding: '10px 16px 12px',
               flexShrink: 0,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
-                SYSTEM STATE TIMELINE • WHAT IS HAPPENING?
+            {/* Header with Pipeline Context */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.07em', color: 'var(--text-primary)' }}>
+                  SYSTEM STATE TIMELINE • WHAT IS HAPPENING?
+                </span>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontFamily: 'var(--font-mono)',
+                    padding: '1px 6px',
+                    borderRadius: 3,
+                    background: running ? 'rgba(34, 197, 94, 0.12)' : 'rgba(148, 163, 184, 0.12)',
+                    color: running ? 'var(--green-400)' : 'var(--text-muted)',
+                    border: `1px solid ${running ? 'rgba(34, 197, 94, 0.25)' : 'var(--border-subtle)'}`,
+                  }}
+                >
+                  {running ? 'DIAGNOSTIC PIPELINE ACTIVE' : 'ENGINE STANDBY'}
+                </span>
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                Sequential Autonomous Response Chain
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                SEQUENTIAL AUTONOMOUS RESPONSE CHAIN
               </div>
             </div>
 
+            {/* Stages Grid with Visual Progression */}
             <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(6, 1fr)',
-                gap: 6,
+                gap: 8,
                 flex: 1,
                 alignItems: 'stretch',
+                minHeight: 0,
               }}
             >
               {timelineStages.map((stage) => {
                 const isCurrent = stage.active
-                const isPassed = stage.completed
-                const borderCol = isCurrent ? 'var(--orange-500)' : isPassed ? 'var(--blue-500)' : 'var(--border-subtle)'
-                const bgCol = isCurrent ? 'rgba(249, 115, 22, 0.12)' : isPassed ? 'rgba(30, 41, 59, 0.6)' : 'rgba(15, 23, 42, 0.4)'
-                const textCol = isCurrent ? 'var(--orange-400)' : isPassed ? 'var(--text-primary)' : 'var(--text-muted)'
+                const isPassed = stage.completed && !isCurrent
+                const isPending = !isCurrent && !isPassed
+
+                const borderCol = isCurrent
+                  ? 'var(--orange-500)'
+                  : isPassed
+                  ? 'rgba(59, 130, 246, 0.45)'
+                  : 'var(--border-subtle)'
+
+                const bgCol = isCurrent
+                  ? 'linear-gradient(180deg, rgba(249, 115, 22, 0.16) 0%, rgba(15, 23, 38, 0.95) 100%)'
+                  : isPassed
+                  ? 'rgba(15, 23, 42, 0.65)'
+                  : 'rgba(12, 18, 32, 0.45)'
+
+                const titleCol = isCurrent
+                  ? 'var(--orange-400)'
+                  : isPassed
+                  ? 'var(--text-primary)'
+                  : 'var(--text-muted)'
+
+                const badgeBg = isCurrent
+                  ? 'var(--orange-500)'
+                  : isPassed
+                  ? 'var(--blue-500)'
+                  : 'var(--border-default)'
+
+                const badgeText = isCurrent
+                  ? '#ffffff'
+                  : isPassed
+                  ? '#ffffff'
+                  : 'var(--text-muted)'
 
                 return (
                   <div
@@ -534,15 +618,17 @@ export function DemoPage() {
                       border: `1px solid ${borderCol}`,
                       background: bgCol,
                       borderRadius: 6,
-                      padding: '8px 10px',
+                      padding: '9px 10px',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
                       transition: 'all 200ms ease',
                       position: 'relative',
                       overflow: 'hidden',
+                      boxShadow: isCurrent ? '0 0 14px rgba(249, 115, 22, 0.18)' : 'none',
                     }}
                   >
+                    {/* Active State Accent Bar */}
                     {isCurrent && (
                       <div
                         style={{
@@ -550,29 +636,109 @@ export function DemoPage() {
                           top: 0,
                           left: 0,
                           right: 0,
-                          height: 2,
+                          height: 3,
                           background: 'var(--orange-500)',
-                          boxShadow: '0 0 6px var(--orange-500)',
+                          boxShadow: '0 0 8px var(--orange-500)',
                         }}
                       />
                     )}
+
+                    {/* Step badge & state status */}
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: textCol, fontFamily: 'var(--font-mono)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <span
+                          style={{
+                            fontSize: 9,
+                            fontWeight: 700,
+                            fontFamily: 'var(--font-mono)',
+                            padding: '1.5px 5px',
+                            borderRadius: 3,
+                            background: badgeBg,
+                            color: badgeText,
+                            letterSpacing: '0.04em',
+                          }}
+                        >
                           STAGE {stage.step}
                         </span>
-                        {isPassed && !isCurrent && (
-                          <span style={{ fontSize: 9, color: 'var(--blue-400)' }}>✓</span>
+
+                        {/* State Status Indicator / Icon */}
+                        {isPassed && (
+                          <span
+                            style={{
+                              fontSize: 9.5,
+                              fontWeight: 700,
+                              color: 'var(--blue-400)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                            }}
+                          >
+                            ✓ PASS
+                          </span>
                         )}
                         {isCurrent && (
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--orange-500)' }} />
+                          <span
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              fontSize: 9,
+                              fontWeight: 800,
+                              color: 'var(--orange-400)',
+                              letterSpacing: '0.04em',
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                background: 'var(--orange-500)',
+                                boxShadow: '0 0 6px var(--orange-500)',
+                              }}
+                            />
+                            ACTIVE
+                          </span>
+                        )}
+                        {isPending && (
+                          <span
+                            style={{
+                              fontSize: 8.5,
+                              color: 'var(--text-disabled)',
+                              fontFamily: 'var(--font-mono)',
+                            }}
+                          >
+                            PENDING
+                          </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: textCol, marginTop: 4, lineHeight: 1.2 }}>
+
+                      {/* Stage Title */}
+                      <div
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: titleCol,
+                          lineHeight: 1.25,
+                          marginTop: 3,
+                          letterSpacing: '0.02em',
+                        }}
+                      >
                         {stage.title}
                       </div>
                     </div>
-                    <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.3 }}>
+
+                    {/* Description & Diagnostic Output */}
+                    <div
+                      style={{
+                        fontSize: 9.5,
+                        color: isCurrent ? 'var(--text-secondary)' : isPassed ? 'var(--text-secondary)' : 'var(--text-disabled)',
+                        lineHeight: 1.35,
+                        marginTop: 6,
+                        borderTop: `1px solid ${isCurrent ? 'rgba(249, 115, 22, 0.2)' : 'var(--border-subtle)'}`,
+                        paddingTop: 4,
+                      }}
+                    >
                       {stage.desc}
                     </div>
                   </div>
@@ -584,16 +750,44 @@ export function DemoPage() {
 
         {/* Right Side: Command Controls & Analytical Proof */}
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflowY: 'auto' }}>
-          {/* Section A: Live AI Diagnosis & Health KPI Card */}
-          <div style={{ padding: '12px 14px', background: 'var(--bg-panel-alt)', borderBottom: '1px solid var(--border-default)' }}>
+          {/* Section A: Live AI Diagnosis & Diagnostic Intelligence */}
+          <div style={{ padding: '12px 16px', background: 'var(--bg-panel-alt)', borderBottom: '1px solid var(--border-default)' }}>
+            {/* 4 Core Diagnostic KPI Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
-              {/* Anomaly Score */}
-              <div style={{ padding: '8px 10px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
-                <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Anomaly Score</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 2 }}>
+              {/* 1. Anomaly Score */}
+              <div style={{ padding: '9px 12px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Anomaly Score
+                  </span>
                   <span
                     style={{
-                      fontSize: 18,
+                      fontSize: 8.5,
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-mono)',
+                      padding: '1px 5px',
+                      borderRadius: 3,
+                      background:
+                        (current?.anomaly_score || 0) > 0.55
+                          ? 'rgba(239, 68, 68, 0.2)'
+                          : (current?.anomaly_score || 0) > 0.28
+                          ? 'rgba(245, 158, 11, 0.2)'
+                          : 'rgba(34, 197, 94, 0.15)',
+                      color:
+                        (current?.anomaly_score || 0) > 0.55
+                          ? 'var(--red-400)'
+                          : (current?.anomaly_score || 0) > 0.28
+                          ? 'var(--amber-400)'
+                          : 'var(--green-400)',
+                    }}
+                  >
+                    {current?.anomaly_level ?? 'NOMINAL'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
+                  <span
+                    style={{
+                      fontSize: 20,
                       fontWeight: 700,
                       fontFamily: 'var(--font-mono)',
                       color:
@@ -606,32 +800,59 @@ export function DemoPage() {
                   >
                     {current ? (current.anomaly_score * 100).toFixed(1) : '0.0'}%
                   </span>
-                  <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-secondary)' }}>
-                    [{current?.anomaly_level ?? 'NOMINAL'}]
-                  </span>
+                </div>
+                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                  Ensemble deviation
                 </div>
               </div>
 
-              {/* Diagnosed Fault */}
-              <div style={{ padding: '8px 10px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
-                <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Diagnosed Fault</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--orange-400)', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {/* 2. Diagnosed Fault / Primary Prediction */}
+              <div style={{ padding: '9px 12px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Model Prediction
+                  </span>
+                  {diagnosisDetails.probability && (
+                    <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--orange-400)' }}>
+                      p={diagnosisDetails.probability}
+                    </span>
+                  )}
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: current?.diagnosis_fault && current.diagnosis_fault !== 'normal' ? 'var(--orange-400)' : 'var(--green-400)',
+                    marginTop: 4,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    letterSpacing: '0.02em',
+                  }}
+                >
                   {current?.diagnosis_fault && current.diagnosis_fault !== 'normal'
                     ? current.diagnosis_fault.replace(/_/g, ' ').toUpperCase()
                     : 'NO ACTIVE FAULT'}
                 </div>
-                <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
                   Conf: {current ? (current.diagnosis_confidence * 100).toFixed(0) : '0'}%
                 </div>
               </div>
 
-              {/* Health Index */}
-              <div style={{ padding: '8px 10px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
-                <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Engine Health</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
+              {/* 3. Engine Health & Degradation */}
+              <div style={{ padding: '9px 12px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Engine Health
+                  </span>
+                  <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    Deg: {current ? current.degradation_index.toFixed(1) : '0.0'}%
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
                   <span
                     style={{
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: 700,
                       fontFamily: 'var(--font-mono)',
                       color:
@@ -644,41 +865,116 @@ export function DemoPage() {
                   >
                     {current ? current.health_index.toFixed(1) : '100.0'}%
                   </span>
-                  <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>
-                    Deg: {current ? current.degradation_index.toFixed(1) : '0.0'}%
-                  </span>
+                </div>
+                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                  Operating integrity
                 </div>
               </div>
 
-              {/* Remaining Useful Life (RUL) */}
-              <div style={{ padding: '8px 10px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
-                <div style={{ fontSize: 9, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Estimated RUL</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
-                  <span style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--blue-400)' }}>
-                    {current ? current.rul_hours.toFixed(0) : '480'}h
+              {/* 4. Estimated RUL */}
+              <div style={{ padding: '9px 12px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Estimated RUL
                   </span>
-                  <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>
+                  <span
+                    style={{
+                      fontSize: 8.5,
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-mono)',
+                      padding: '1px 5px',
+                      borderRadius: 3,
+                      background: 'rgba(96, 165, 250, 0.15)',
+                      color: 'var(--blue-400)',
+                    }}
+                  >
                     {current?.rul_trend ?? 'STABLE'}
                   </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                  <span style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--blue-400)' }}>
+                    {current ? current.rul_hours.toFixed(0) : '480'}h
+                  </span>
+                </div>
+                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                  Time-to-limit margin
                 </div>
               </div>
             </div>
 
-            {/* Explanation Quote Banner */}
+            {/* Diagnostic Reasoning & Why This Prediction Panel */}
             {current?.diagnosis_explanation && (
               <div
                 style={{
-                  marginTop: 8,
-                  padding: '6px 10px',
-                  background: 'rgba(15, 23, 42, 0.6)',
-                  borderRadius: 4,
+                  marginTop: 10,
+                  padding: '10px 14px',
+                  background: 'rgba(11, 18, 32, 0.85)',
+                  borderRadius: 6,
+                  border: '1px solid var(--border-default)',
                   borderLeft: '3px solid var(--orange-500)',
-                  fontSize: 10.5,
-                  color: 'var(--text-secondary)',
                 }}
               >
-                <span style={{ fontWeight: 600, color: 'var(--orange-400)' }}>WHY? </span>
-                {current.diagnosis_explanation}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--orange-400)', letterSpacing: '0.06em' }}>
+                      WHY THIS PREDICTION?
+                    </span>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                      Diagnostic Evidence & Pattern Consensus
+                    </span>
+                  </div>
+
+                  {/* Quantitative Consensus Indicators */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {diagnosisDetails.probability && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase' }}>PROBABILITY:</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--orange-400)' }}>
+                          {diagnosisDetails.probability}
+                        </span>
+                      </div>
+                    )}
+                    {diagnosisDetails.consensus && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{ fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TEMPORAL CONSENSUS:</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--blue-400)' }}>
+                          {diagnosisDetails.consensus}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Dominant Observed Indicators Chips */}
+                {diagnosisDetails.indicators.length > 0 && (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)' }}>
+                      DOMINANT OBSERVED INDICATORS:
+                    </span>
+                    {diagnosisDetails.indicators.map((ind) => (
+                      <span
+                        key={ind.key}
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          padding: '2px 8px',
+                          borderRadius: 4,
+                          background: 'rgba(249, 115, 22, 0.12)',
+                          color: 'var(--orange-300)',
+                          border: '1px solid rgba(249, 115, 22, 0.3)',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
+                        {ind.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Full Explanation Text */}
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 6, lineHeight: 1.4 }}>
+                  {current.diagnosis_explanation}
+                </div>
               </div>
             )}
           </div>
@@ -1207,46 +1503,114 @@ export function DemoPage() {
               )}
             </div>
 
-            {/* Section D: Maintenance Advisory Card */}
-            {current?.maintenance_message && (
-              <div
-                style={{
-                  margin: '0 16px 12px',
-                  padding: 10,
-                  borderRadius: 6,
-                  background: 'var(--bg-card)',
-                  border: `1px solid ${
-                    current.maintenance_level === 'CRITICAL'
-                      ? 'rgba(239,68,68,0.4)'
-                      : current.maintenance_level === 'WARNING'
-                      ? 'rgba(245,158,11,0.4)'
-                      : 'var(--border-subtle)'
-                  }`,
-                  flexShrink: 0,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--orange-400)', letterSpacing: '0.05em' }}>
-                    PREDICTIVE MAINTENANCE ADVISORY
-                  </span>
-                  <span
+            {/* Section D: Predictive Maintenance Advisory Card — Redesigned */}
+            {(() => {
+              const level = current?.maintenance_level ?? 'NORMAL'
+              const message = current?.maintenance_message || (running ? 'Engine telemetry conforms to nominal aero-piston envelopes. No urgent service required.' : 'Simulation inactive. Awaiting mission start or telemetry stream.')
+              const isCrit = level === 'CRITICAL'
+              const isWarn = level === 'WARNING'
+
+              const cardBg = isCrit
+                ? 'linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, rgba(19, 31, 48, 0.95) 100%)'
+                : isWarn
+                ? 'linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, rgba(19, 31, 48, 0.95) 100%)'
+                : 'rgba(15, 23, 38, 0.85)'
+
+              const borderCol = isCrit
+                ? 'rgba(239, 68, 68, 0.45)'
+                : isWarn
+                ? 'rgba(245, 158, 11, 0.45)'
+                : 'var(--border-default)'
+
+              const badgeBg = isCrit
+                ? 'rgba(239, 68, 68, 0.2)'
+                : isWarn
+                ? 'rgba(245, 158, 11, 0.2)'
+                : 'rgba(34, 197, 94, 0.15)'
+
+              const badgeColor = isCrit
+                ? 'var(--red-400)'
+                : isWarn
+                ? 'var(--amber-400)'
+                : 'var(--green-400)'
+
+              const badgeBorder = isCrit
+                ? 'rgba(239, 68, 68, 0.4)'
+                : isWarn
+                ? 'rgba(245, 158, 11, 0.4)'
+                : 'rgba(34, 197, 94, 0.3)'
+
+              return (
+                <div
+                  style={{
+                    margin: '8px 16px 14px',
+                    padding: '12px 14px',
+                    borderRadius: 6,
+                    background: cardBg,
+                    border: `1px solid ${borderCol}`,
+                    flexShrink: 0,
+                    boxShadow: isCrit ? '0 0 16px rgba(239, 68, 68, 0.15)' : isWarn ? '0 0 12px rgba(245, 158, 11, 0.12)' : 'none',
+                    transition: 'all 250ms ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: isCrit ? 'var(--red-400)' : isWarn ? 'var(--orange-400)' : 'var(--text-primary)', letterSpacing: '0.06em' }}>
+                        PREDICTIVE MAINTENANCE ADVISORY
+                      </span>
+                      <span style={{ fontSize: 9.5, color: 'var(--text-muted)' }}>
+                        Autonomous Action Directive
+                      </span>
+                    </div>
+
+                    {/* Severity Level Pill */}
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        fontFamily: 'var(--font-mono)',
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        background: badgeBg,
+                        color: badgeColor,
+                        border: `1px solid ${badgeBorder}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
+                      }}
+                    >
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: badgeColor }} />
+                      LEVEL: {level}
+                    </span>
+                  </div>
+
+                  {/* Main Advisory Recommendation */}
+                  <div
                     style={{
-                      fontSize: 9,
-                      fontWeight: 700,
-                      padding: '1px 6px',
-                      borderRadius: 3,
-                      background: current.maintenance_level === 'CRITICAL' ? 'var(--red-900)' : 'var(--amber-900)',
-                      color: current.maintenance_level === 'CRITICAL' ? 'var(--red-400)' : 'var(--amber-400)',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: isCrit ? 'var(--red-300)' : isWarn ? 'var(--amber-300)' : 'var(--text-primary)',
+                      marginTop: 6,
+                      lineHeight: 1.45,
                     }}
                   >
-                    LEVEL: {current.maintenance_level}
-                  </span>
+                    {message}
+                  </div>
+
+                  {/* Operational Context Subtext */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 6, borderTop: '1px solid var(--border-subtle)', fontSize: 9.5, color: 'var(--text-muted)' }}>
+                    <span>
+                      {isCrit ? 'Action urgency: Immediate ground inspection recommended' : isWarn ? 'Action urgency: Monitor trend and schedule inspection interval' : 'Condition: All thermal and kinematic thresholds within safe flight margin'}
+                    </span>
+                    {current?.rul_hours !== undefined && (
+                      <span style={{ fontFamily: 'var(--font-mono)' }}>
+                        RUL Window: {current.rul_hours.toFixed(0)}h
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-primary)', marginTop: 4 }}>
-                  {current.maintenance_message}
-                </div>
-              </div>
-            )}
+              )
+            })()}
           </div>
         </div>
       </div>
