@@ -542,3 +542,159 @@ Vite bundle: **PASSED** (chunk-size warning is pre-existing Three.js bundle, not
 **Restore tag (DO NOT DELETE):** `mission-control-ui-before-redesign` → `8d39f13`
 
 *Last updated by: Agent 2 — Sensor Telemetry UI Specialist — 2026-09-21*
+
+---
+
+---
+
+## AGENT 3 — TIMELINE / MODEL PREDICTION / ADVISORY
+
+### Objective
+
+Redesign the presentation layer for the three diagnostic intelligence sections of Mission Control (`DemoPage.tsx`):
+1. **System State Timeline • What Is Happening?** (Sequential Autonomous Response Chain)
+2. **Model Prediction / WHY** (Core KPI cards + Diagnostic Evidence & Pattern Consensus)
+3. **Predictive Maintenance Advisory** (Always-visible autonomous action directive)
+
+All changes were strictly presentation-layer UI improvements preserving dynamic telemetry bindings, underlying state machines, ML inference results, and the sensor comparison panel completed by Agent 2.
+
+---
+
+### Files Modified
+
+| File | What changed |
+|---|---|
+| `frontend/src/pages/DemoPage.tsx` | Redesigned System State Timeline (195px, active accent bar, stage status badges, readable typography), Section A (enlarged KPI numbers, dedicated probability + consensus badges, dominant observed indicators chip list), and Section D (always-visible structured advisory card with severity level, clear recommendation, and operational context). |
+
+**Commits:**
+- `caa4521 feat(demo-ui): redesign timeline, model prediction WHY panel, and predictive maintenance advisory`
+
+---
+
+### Files Intentionally Untouched
+
+| File | Status |
+|---|---|
+| `frontend/src/components/3d/EngineScene.tsx` | ✅ NOT modified (3D canvas, controls, viewport preserved) |
+| `frontend/src/components/3d/PistonEngineModel.tsx` | ✅ NOT modified (3D geometry and animations preserved) |
+| `frontend/src/context/TelemetryContext.tsx` | ✅ NOT modified (telemetry normalizer, state, WS logic preserved) |
+| `frontend/src/hooks/useTelemetrySocket.ts` | ✅ NOT modified |
+| `frontend/src/api/client.ts` | ✅ NOT modified |
+| `frontend/src/types.ts` | ✅ NOT modified |
+| `frontend/src/App.tsx` | ✅ NOT modified |
+| `frontend/src/index.css` | ✅ NOT modified |
+| Sensor Comparison Panel (Section C) | ✅ NOT modified (Agent 2 work preserved intact) |
+| Operator Simulation Console (Section B) | ✅ NOT modified (controls, fault injection intact) |
+| All `backend/` files | ✅ NOT modified |
+| All other pages | ✅ NOT modified |
+
+---
+
+### System State Timeline Changes
+
+- **Diagnostic Progression Structure:** Upgraded from cramped 180px cards to a dedicated 195px diagnostic pipeline container with dark aerospace styling.
+- **Stage Status Indicators:**
+  - **ACTIVE (Current Stage):** Highlighted with an orange accent bar, glowing border, orange font tokens, and an animated-style active indicator dot with "ACTIVE" tag.
+  - **COMPLETED (Past Stages):** Clean blue-500 border, blue badge, checkmark, and "✓ PASS" indicator.
+  - **PENDING (Future Stages):** Subtly muted background with "PENDING" label, retaining full readability without cluttering visual hierarchy.
+- **Typography & Labels:** Increased font sizes (`11px` bold titles, `9.5px` diagnostic outputs), improved line heights, and added pipeline status indicator (`DIAGNOSTIC PIPELINE ACTIVE` vs `ENGINE STANDBY`).
+- **Sequential Flow:** Preserved exact 6-stage order (`01 HEALTHY BASELINE` → `02 DEGRADATION ONSET` → `03 ANOMALY DETECTED` → `04 FAULT IDENTIFIED` → `05 HEALTH & RUL IMPACT` → `06 MAINTENANCE ADVISORY`) with zero modification to stage transition rules.
+
+---
+
+### Model Prediction Changes
+
+- **Core KPI Cards (Section A):**
+  - **Anomaly Score:** 20px bold mono value (up from 18px), dynamic color thresholds (red > 55%, amber > 28%, green <= 28%), severity badge (`CRITICAL`, `WARNING`, `NOMINAL`), and plain-English subtext ("Ensemble deviation").
+  - **Model Prediction:** 14px bold readable fault name, confidence percentage, and inline probability pill (`p=XX.X%`).
+  - **Engine Health:** 20px bold mono value, degradation index readout, and "Operating integrity" subtext.
+  - **Estimated RUL:** 20px bold mono value, trend status badge (`STABLE`, etc.), and "Time-to-limit margin" subtext.
+- **Diagnostic Reasoning & WHY Panel:**
+  - Distinct header: **WHY THIS PREDICTION?** with "Diagnostic Evidence & Pattern Consensus" subtitle.
+  - **Quantitative Metrics:** Explicit separate badges for **PROBABILITY** (e.g. `64.8%`) and **TEMPORAL CONSENSUS** (e.g. `100%`) parsed directly from the backend model explanation string or confidence score.
+  - **Dominant Observed Indicators:** Extracted into high-contrast monospace chips (e.g. `Fuel Flow Deviation Pct`, `Oil Temp Deviation Pct`, `Egt Deviation Pct`, `Manifold Deviation Pct`) for fast scanning by judges/operators.
+  - **Full Explanation Text:** Preserved in full at 11px with enhanced line height and color contrast.
+
+---
+
+### Predictive Maintenance Advisory Changes
+
+- **Always Visible:** Replaced conditional rendering that hid the section when nominal with a persistent, high-visibility advisory panel. Shows "Engine telemetry conforms to nominal aero-piston envelopes" during normal operation or live fault directives when degraded.
+- **Severity Level Indicator:** Clean, compact status pill with color-coded dot and border (`NORMAL` in green, `WARNING` in amber, `CRITICAL` in red).
+- **Clear Recommendation:** Bold 12px recommendation text with status-tinted gradients for urgent warnings/criticals.
+- **Operational Context Subtext:** Adds action urgency guidelines (e.g., immediate ground inspection vs monitoring interval) and RUL margin window.
+
+---
+
+### Existing Logic Preserved
+
+- ✅ Backend untouched — zero backend files edited
+- ✅ TelemetryContext untouched — no changes to normalization, polling, or WS
+- ✅ Prediction logic untouched — ML ExtraTrees model output, probabilities, and explanations originate unaltered from the pipeline
+- ✅ Temporal consensus calculation untouched — backend rolling window majority vote logic preserved
+- ✅ System state machine untouched — `timelineStages` logic and thresholds identical
+- ✅ Maintenance rules untouched — advisory levels and messages from backend preserved
+- ✅ 3D engine untouched — `<EngineScene />` props and container intact
+- ✅ Sensor comparison table untouched — Agent 2's card-based grid panel preserved
+
+---
+
+### Data Sources Preserved
+
+- **Timeline:** Evaluated via `timelineStages` using `current.health_index`, `current.degradation_index`, `current.anomaly_level`, `current.diagnosis_fault`, `current.rul_hours`, and `current.maintenance_level`.
+- **Model Prediction & Metrics:** Direct from `current.diagnosis_fault`, `current.diagnosis_confidence`, `current.anomaly_score`, `current.anomaly_level`, `current.health_index`, `current.degradation_index`, `current.rul_hours`, `current.rul_trend`.
+- **Consensus & Indicators:** Parsed from `current.diagnosis_explanation` (formatted by `backend/app/analytics/diagnosis.py`) with fallback to `current.contributing_parameters`.
+- **Advisory:** Sourced from `current.maintenance_level` and `current.maintenance_message` generated by `backend/app/services/advisory.py`.
+
+---
+
+### Validation Results
+
+**Build (`npm run build`):**
+```
+> tsc -b && vite build
+vite v7.3.6 building client environment for production...
+✓ 1275 modules transformed.
+dist/index.html                     0.44 kB │ gzip:   0.30 kB
+dist/assets/index-CS604stk.css     27.08 kB │ gzip:   5.31 kB
+dist/assets/index-Mtf4NLPT.js   2,393.58 kB │ gzip: 722.98 kB
+✓ built in 9.29s
+Exit code: 0
+```
+TypeScript compilation: **PASSED** (0 errors)
+Vite bundle: **PASSED**
+
+---
+
+### Runtime Verification
+
+- Dev server (`http://localhost:5173`) running and healthy. Vite HMR hot-reloaded `DemoPage.tsx` successfully.
+- Verified only `frontend/src/pages/DemoPage.tsx` was modified.
+- Verified 3D EngineScene container dimensions and bindings were preserved.
+- Verified Operator Simulation Console buttons, sliders, and fault injection remained untouched.
+- Verified Agent 2's sensor comparison panel remains intact.
+
+---
+
+### Known Issues
+
+- None. Clean build and TypeScript verification.
+
+---
+
+### Instructions For Agent 4
+
+> **READ HANDOVER.md IN FULL BEFORE MODIFYING ANYTHING.**
+
+1. **Agent 2 Work:** Sensor comparison table has been redesigned and verified. Do NOT revert or restyle it.
+2. **Agent 3 Work:** Timeline, Model Prediction / WHY, and Maintenance Advisory have been redesigned and verified. Do NOT revert them.
+3. **Your Scope (Agent 4):**
+   - **Full-Page Integration & Visual Composition:** Unify spacing, layout balance, and scrolling dynamics.
+   - **Viewport Height Optimization:** Note that the enlarged sensor table and upgraded timeline consume more vertical height. Ensure desktop responsiveness at 1920×1080, 1600×900, 1440×900, and 1366×768 with clean scrolling in the right panel and 3D visibility in the left panel.
+   - **3D Engine Safety:** Do NOT modify `EngineScene.tsx`, `PistonEngineModel.tsx`, or any 3D animation code.
+   - **Data/Backend Safety:** Do NOT touch any backend code, API routes, or TelemetryContext logic.
+
+**Branch:** `redesign/mission-control-ui`  
+**Restore tag:** `mission-control-ui-before-redesign` → `8d39f13` (DO NOT DELETE)
+
+*Last updated by: Agent 3 — Diagnostic Intelligence UI Specialist — 2026-09-21*
