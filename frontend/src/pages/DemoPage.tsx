@@ -925,97 +925,293 @@ export function DemoPage() {
             )}
           </div>
 
-          {/* Section C: Live Digital Twin vs Actual Comparison Table */}
-          <div style={{ flex: 1, padding: '12px 14px', background: 'var(--bg-surface)', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
-                ACTUAL SENSORS vs DIGITAL TWIN EXPECTATION
+          {/* Section C: Live Digital Twin vs Actual Comparison — Redesigned Panel */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', overflowY: 'auto', minHeight: 0 }}>
+            {/* Panel header */}
+            <div
+              style={{
+                padding: '10px 16px 8px',
+                borderBottom: '1px solid var(--border-default)',
+                background: 'var(--bg-panel)',
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.07em', color: 'var(--text-primary)' }}>
+                  ACTUAL SENSORS vs DIGITAL TWIN EXPECTATION
+                </span>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                  RESIDUAL Δ MATRIX
+                </span>
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                Real-Time Residual Delta Matrix
+              {/* Column headers */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '130px 1fr 1fr 100px 80px',
+                  gap: 0,
+                  marginTop: 8,
+                  paddingBottom: 4,
+                  borderBottom: '1px solid var(--border-subtle)',
+                }}
+              >
+                {(['PARAMETER', 'ACTUAL', 'DIGITAL TWIN', 'DEVIATION', 'STATUS'] as const).map((col, i) => (
+                  <div
+                    key={col}
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 700,
+                      letterSpacing: '0.08em',
+                      color: 'var(--text-muted)',
+                      textAlign: i >= 3 ? 'right' : 'left',
+                      paddingRight: i === 4 ? 0 : 8,
+                    }}
+                  >
+                    {col}
+                  </div>
+                ))}
               </div>
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-default)', color: 'var(--text-muted)', textAlign: 'left' }}>
-                  <th style={{ padding: '6px 8px' }}>PARAMETER</th>
-                  <th style={{ padding: '6px 8px' }}>ACTUAL</th>
-                  <th style={{ padding: '6px 8px' }}>DIGITAL TWIN</th>
-                  <th style={{ padding: '6px 8px' }}>DEVIATION</th>
-                  <th style={{ padding: '6px 8px', textAlign: 'right' }}>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comparisonRows.map((row) => {
-                  const statusBg =
-                    row.status === 'CRITICAL'
-                      ? 'rgba(239,68,68,0.15)'
-                      : row.status === 'WARNING'
-                      ? 'rgba(245,158,11,0.15)'
-                      : 'rgba(34,197,94,0.1)'
-                  const statusColor =
-                    row.status === 'CRITICAL'
-                      ? 'var(--red-400)'
-                      : row.status === 'WARNING'
-                      ? 'var(--amber-400)'
-                      : 'var(--green-400)'
+            {/* Signal rows */}
+            <div style={{ flex: 1, padding: '4px 0' }}>
+              {comparisonRows.length === 0 ? (
+                <div
+                  style={{
+                    padding: '24px 16px',
+                    textAlign: 'center',
+                    color: 'var(--text-muted)',
+                    fontSize: 12,
+                    fontStyle: 'italic',
+                  }}
+                >
+                  Awaiting telemetry — start engine to populate sensor data
+                </div>
+              ) : (
+                comparisonRows.map((row, idx) => {
+                  const isWarn = row.status === 'WARNING'
+                  const isCrit = row.status === 'CRITICAL'
+                  const isNorm = row.status === 'NORMAL'
+
+                  const statusColor = isCrit
+                    ? 'var(--red-400)'
+                    : isWarn
+                    ? 'var(--amber-400)'
+                    : 'var(--green-400)'
+
+                  const statusBg = isCrit
+                    ? 'rgba(239,68,68,0.14)'
+                    : isWarn
+                    ? 'rgba(245,158,11,0.14)'
+                    : 'rgba(74,222,128,0.1)'
+
+                  const statusBorder = isCrit
+                    ? 'rgba(239,68,68,0.35)'
+                    : isWarn
+                    ? 'rgba(245,158,11,0.35)'
+                    : 'rgba(74,222,128,0.25)'
+
+                  const deviationColor = isCrit
+                    ? 'var(--red-400)'
+                    : isWarn
+                    ? 'var(--amber-400)'
+                    : row.residualPct > 0
+                    ? 'var(--orange-400)'
+                    : row.residualPct < 0
+                    ? 'var(--blue-400)'
+                    : 'var(--text-muted)'
+
+                  // bar fill: clamp abs(residualPct) to 0–50%, scale to 0–100% width
+                  const barFillPct = Math.min(Math.abs(row.residualPct) / 50, 1) * 100
+                  const barColor = isCrit
+                    ? 'var(--red-500)'
+                    : isWarn
+                    ? 'var(--amber-500)'
+                    : 'var(--blue-500)'
+
+                  const rowBg = isCrit
+                    ? 'rgba(239,68,68,0.05)'
+                    : isWarn
+                    ? 'rgba(245,158,11,0.04)'
+                    : 'transparent'
 
                   return (
-                    <tr
+                    <div
                       key={row.key}
                       style={{
-                        borderBottom: '1px solid var(--border-subtle)',
-                        transition: 'background 120ms ease',
+                        display: 'grid',
+                        gridTemplateColumns: '130px 1fr 1fr 100px 80px',
+                        alignItems: 'center',
+                        gap: 0,
+                        padding: '9px 16px',
+                        borderBottom: idx < comparisonRows.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                        background: rowBg,
+                        transition: 'background 200ms ease',
+                        minHeight: 52,
                       }}
                     >
-                      <td style={{ padding: '6px 8px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {row.label}
-                      </td>
-                      <td style={{ padding: '6px 8px', fontFamily: 'var(--font-mono)' }}>
-                        {row.actual.toFixed(1)}{' '}
-                        <span style={{ fontSize: 9.5, color: 'var(--text-muted)' }}>{row.unit}</span>
-                      </td>
-                      <td style={{ padding: '6px 8px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
-                        {row.expected.toFixed(1)}{' '}
-                        <span style={{ fontSize: 9.5, color: 'var(--text-muted)' }}>{row.unit}</span>
-                      </td>
-                      <td
-                        style={{
-                          padding: '6px 8px',
-                          fontFamily: 'var(--font-mono)',
-                          fontWeight: 600,
-                          color: row.residualPct > 0 ? 'var(--orange-400)' : row.residualPct < 0 ? 'var(--blue-400)' : 'var(--text-muted)',
-                        }}
-                      >
-                        {row.residualPct >= 0 ? `+${row.residualPct.toFixed(1)}%` : `${row.residualPct.toFixed(1)}%`}
-                      </td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>
-                        <span
+                      {/* PARAMETER */}
+                      <div style={{ paddingRight: 8 }}>
+                        <div
                           style={{
-                            display: 'inline-block',
-                            padding: '2px 6px',
-                            borderRadius: 3,
-                            fontSize: 9,
+                            fontSize: 13,
                             fontWeight: 700,
-                            background: statusBg,
-                            color: statusColor,
+                            color: isCrit ? 'var(--red-400)' : isWarn ? 'var(--amber-400)' : 'var(--text-primary)',
+                            letterSpacing: '0.01em',
+                            lineHeight: 1.2,
                           }}
                         >
+                          {row.label}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: 'var(--text-muted)',
+                            marginTop: 1,
+                            fontFamily: 'var(--font-mono)',
+                          }}
+                        >
+                          {row.unit}
+                        </div>
+                      </div>
+
+                      {/* ACTUAL */}
+                      <div style={{ paddingRight: 8 }}>
+                        <div
+                          style={{
+                            fontSize: 17,
+                            fontWeight: 700,
+                            fontFamily: 'var(--font-mono)',
+                            color: 'var(--text-primary)',
+                            lineHeight: 1,
+                            transition: 'color 300ms ease',
+                          }}
+                        >
+                          {row.actual.toFixed(1)}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 9.5,
+                            color: 'var(--text-muted)',
+                            marginTop: 2,
+                          }}
+                        >
+                          sensor reading
+                        </div>
+                      </div>
+
+                      {/* DIGITAL TWIN */}
+                      <div style={{ paddingRight: 8 }}>
+                        <div
+                          style={{
+                            fontSize: 17,
+                            fontWeight: 600,
+                            fontFamily: 'var(--font-mono)',
+                            color: 'var(--text-secondary)',
+                            lineHeight: 1,
+                            transition: 'color 300ms ease',
+                          }}
+                        >
+                          {row.expected.toFixed(1)}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 9.5,
+                            color: 'var(--text-muted)',
+                            marginTop: 2,
+                          }}
+                        >
+                          twin model
+                        </div>
+                      </div>
+
+                      {/* DEVIATION */}
+                      <div style={{ textAlign: 'right', paddingRight: 12 }}>
+                        <div
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 700,
+                            fontFamily: 'var(--font-mono)',
+                            color: deviationColor,
+                            lineHeight: 1,
+                            transition: 'color 300ms ease',
+                          }}
+                        >
+                          {row.residualPct >= 0 ? '+' : ''}{row.residualPct.toFixed(1)}%
+                        </div>
+                        {/* Micro deviation bar */}
+                        <div
+                          style={{
+                            marginTop: 4,
+                            height: 3,
+                            borderRadius: 2,
+                            background: 'var(--border-subtle)',
+                            overflow: 'hidden',
+                            position: 'relative',
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: row.residualPct >= 0 ? '50%' : `${50 - barFillPct / 2}%`,
+                              width: `${barFillPct / 2}%`,
+                              height: '100%',
+                              background: barColor,
+                              borderRadius: 2,
+                              transition: 'width 400ms ease, left 400ms ease',
+                            }}
+                          />
+                          {/* Center tick */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: '50%',
+                              width: 1,
+                              height: '100%',
+                              background: 'var(--border-emphasis)',
+                              transform: 'translateX(-50%)',
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* STATUS */}
+                      <div style={{ textAlign: 'right' }}>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '3px 8px',
+                            borderRadius: 4,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            letterSpacing: '0.04em',
+                            background: statusBg,
+                            color: statusColor,
+                            border: `1px solid ${statusBorder}`,
+                            transition: 'background 300ms ease, color 300ms ease, border-color 300ms ease',
+                          }}
+                        >
+                          {isCrit && <span style={{ fontSize: 8 }}>●</span>}
+                          {isWarn && <span style={{ fontSize: 8 }}>▲</span>}
+                          {isNorm && <span style={{ fontSize: 8 }}>✓</span>}
                           {row.status}
                         </span>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   )
-                })}
-              </tbody>
-            </table>
+                })
+              )}
+            </div>
 
             {/* Section D: Maintenance Advisory Card */}
             {current?.maintenance_message && (
               <div
                 style={{
-                  marginTop: 12,
+                  margin: '0 16px 12px',
                   padding: 10,
                   borderRadius: 6,
                   background: 'var(--bg-card)',
@@ -1026,6 +1222,7 @@ export function DemoPage() {
                       ? 'rgba(245,158,11,0.4)'
                       : 'var(--border-subtle)'
                   }`,
+                  flexShrink: 0,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
