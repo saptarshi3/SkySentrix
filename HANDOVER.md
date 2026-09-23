@@ -994,3 +994,70 @@ Detailed step-by-step guides for Vercel and Render are fully documented in `DEPL
 *Last updated by: Deployment Readiness Engineer — 2026-09-24*
 
 
+
+---
+
+## AGENT 6 — DASHBOARD FRONTEND UI TWEAKS
+
+### Role
+Dashboard Frontend UI Tweaks Agent — improved diagnostic readability on the Dashboard page.
+
+### Objective
+Improve the Dashboard page's information density and diagnostic clarity across 4 areas, without touching the backend, 3D engine, Mission Control page, or any API/telemetry logic.
+
+### Scope (ONLY these files were modified)
+- `frontend/src/components/panels/SensorPanel.tsx`
+- `frontend/src/components/panels/HealthPanel.tsx`
+
+### Changes Made
+
+#### 1. Sensor Deviations (SensorPanel.tsx)
+- Added `DeviationBadge` component: a compact inline badge showing `±X.X%` deviation from expected value.
+- Badge color thresholds: **green** ≤5% | **amber** 5–15% | **red** >15%.
+- Data source: `frame.residuals[sensor].residual_pct` — pre-computed by backend, no new calculations.
+- Passed as `devPct` prop to all 9 `SensorRow` instances (RPM, Manifold Pressure, Fuel Flow, EGT, CHT, Oil Pressure, Oil Temperature, Vibration, Battery Voltage).
+
+#### 2. Anomaly Detection Reasons (HealthPanel.tsx)
+- Added **"Why this score?"** subsection below the Anomaly Score bar.
+- Renders up to 4 contributing parameter chips (from `anomaly.contributing_parameters`).
+- Highlighted red when anomaly level is CRITICAL.
+
+#### 3. Fault Prediction Reasons (HealthPanel.tsx)
+- Added **"Contributing Evidence"** subsection to the Engine Status / Fault section.
+- Displays top-4 evidence entries from `diagnosis.evidence` (sorted by magnitude).
+- Each entry shows signal name + evidence value; highlighted when `|value| > 0.3`.
+- Only visible when a fault is active (`isAnomalous === true`).
+
+#### 4. AI Predictive Insights expansion (HealthPanel.tsx)
+Restructured into clearly labeled sub-sections:
+- **Current Assessment**: `diagnosis.explanation` in a card
+- **Diagnosis Confidence**: progress bar (color-coded by threshold)
+- **Anomaly Score** + **Why this score?**
+- **Key Subsystem Signals**: per-subsystem health % chips
+- **Recommended Action**: `maintenance.message` in a level-colored card
+- **RUL Context**: `rul.current_rul_hours`, trend, and `rul.note`
+
+### Git State
+| Item | Value |
+|---|---|
+| Branch | `dashboard-ui-tweaks` |
+| Backup tag | `dashboard-before-ui-tweaks` |
+| Commit | `95762c1` |
+| Pushed to | `origin/dashboard-ui-tweaks` |
+| Build status | Exit 0, 1275 modules, 7.07s |
+
+### Preserved / Unchanged
+- Backend: No changes.
+- API contracts: No changes.
+- 3D engine: `EngineScene.tsx`, `PistonEngineModel.tsx` — untouched.
+- Mission Control / DemoPage: Untouched.
+- All other pages: Analytics, Archive, Mission, Settings, Validation — untouched.
+- TelemetryContext: No changes to data fetching or normalization logic.
+- package.json / dependencies: No changes.
+
+### Next Steps
+1. In Vercel Dashboard, look for the Preview deployment on `dashboard-ui-tweaks` branch.
+2. Verify Dashboard: sensor deviation badges, anomaly reasons, fault evidence, AI insights all render correctly.
+3. If preview looks good: merge `dashboard-ui-tweaks` → `main` via PR. Vercel auto-deploys production.
+
+*Last updated by: Dashboard Frontend UI Tweaks Agent — 2026-09-24*
