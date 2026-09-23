@@ -1145,3 +1145,104 @@ None.
 3. Merge `dashboard-ui-tweaks` into `main` for production rollout.
 
 *Last updated by: Dashboard Graph Repair Agent — 2026-09-24*
+
+--------------------------------------------------
+## MISSION SESSION INSPECTION
+--------------------------------------------------
+
+### Observed Problem
+When opening the public Vercel production URL (`https://skysentrix.vercel.app`), the page may immediately show an ongoing mission with non-zero elapsed time (e.g. 02:45, 08:04), progressing telemetry, and active faults, rather than starting in a fresh `MISSION READY / STANDBY` state at `00:00`.
+
+### Root Cause
+Classification: **CATEGORY C** (Backend simulator runs globally independent of browser) + **CATEGORY D** (WebSocket connection auto-subscribes to existing global mission) + **CATEGORY G** (Disconnections do not stop or clean up the server-side simulation loop).
+
+1. **Singleton Backend Engine**: In `backend/app/main.py` (line 65), `realtime_engine = RealtimeEngine()` is instantiated as a module-level global singleton. There is a single simulator, a single digital twin pipeline, and a single shared WebSocket connection manager.
+2. **Autonomous Background Task**: When a user or demo trigger calls `POST /api/simulation/demo` (duration: 420s / 7 mins) or `POST /api/simulation/start` (duration: 600s / 10 mins), the backend spawns `asyncio.create_task(self._run_loop(duration_sec))` (`realtime.py` line 112). This loop runs autonomously on the Render server regardless of whether browser tabs remain open or closed.
+3. **Auto-Attach on WebSocket Connect**: On client initial load, `TelemetryContext.tsx` establishes a WebSocket to `/ws/telemetry`. The backend immediately sends `{"type": "state", **realtime_engine.get_state()}` (`main.py` line 182). If the server-side loop is still running from any prior user or test, `running: true` and the current elapsed time are returned, and the client attaches to the existing stream.
+4. **No Client Disconnection Teardown**: When a browser tab closes, `connection_manager.disconnect()` removes the WebSocket socket from `self.connections`, but deliberately leaves `self.running = True` and the `_run_loop` task running in the background.
+
+### Evidence
+- Live backend inspection via `curl https://skysentrix.onrender.com/api/simulation/state` confirmed an active mission was progressing autonomously on the Render host (`mission_elapsed_sec: 484.0`, `duration_sec: 600.0`, `mode: loiter`, `active_faults: { overheating }`).
+- 13 seconds later, a second query returned `mission_elapsed_sec: 497.0`, confirming an active server-side `asyncio` task stepping independently of any browser action.
+- Code trace of `realtime.py` line 144 (`_run_loop`) confirms it only terminates when `mission_elapsed_sec >= duration_sec` or when `stop()` is explicitly called.
+- Code trace of `main.py` lines 186-190 confirms `WebSocketDisconnect` executes `disconnect(websocket)` but does NOT invoke `realtime_engine.stop()`.
+
+### Frontend Findings
+- **Storage**: `localStorage`, `sessionStorage`, and `indexedDB` are completely absent across `frontend/src`. No simulation state or timer is persisted in the browser.
+- **Auto-Start**: Zero `useEffect` hooks in `DashboardPage.tsx`, `DemoPage.tsx`, `App.tsx`, or `TopBar.tsx` trigger `startSimulation`, `startMission`, or `startDemoScenario`.
+- **State Ingestion**: `TelemetryContext.tsx` relies strictly on the server's authoritative state via `/ws/telemetry` and `GET /api/simulation/state` polling (every 2.5s).
+
+### WebSocket Findings
+- Connecting to `/ws/telemetry` attaches the socket to the global broadcast pool.
+- The initial message received by the client is `{"type": "state", ...}`, reflecting the current singleton state of `realtime_engine`.
+- Subsequent messages are live `PipelineFrame` payloads broadcast at 1 Hz from the singleton loop.
+
+### Backend Findings
+- `realtime_engine = RealtimeEngine()` is a singleton in `backend/app/main.py`.
+- `@app.on_event("startup")` only runs `crud.init_db()`; it does NOT auto-start the simulator on server boot.
+- The simulator is strictly started by HTTP `POST /api/simulation/start` or `POST /api/simulation/demo`.
+
+### Simulator Lifecycle
+1. `STANDBY / IDLE`: `self.running = False`, `self.latest_payload = None`. New clients see `STANDBY / READY`, time `00:00`.
+2. `STARTED`: User triggers start -> `self.simulator.reset()` -> `self.running = True` -> `_run_loop(duration)` begins.
+3. `RUNNING`: Autonomous loop steps every 1s, broadcasting frames to all connected WebSockets.
+4. `DISCONNECT`: Client closes tab -> WebSocket removed from set -> Loop continues running on server.
+5. `COMPLETED / STOPPED`: Reaches `duration_sec` or `stop()` called -> loop task cancelled -> `self.running = False`.
+
+### Mission Timer Source
+- Displayed as `{Math.floor(current.mission_elapsed_sec / 60)}m ...` in `DemoPage.tsx` (line 433).
+- Originates from `payload["mission_elapsed_sec"] = self.simulator.mission_elapsed_sec` in `realtime.py` (line 80).
+- Pure backend-driven simulation elapsed time.
+
+### Browser Persistence Findings
+- Confirmed zero browser persistence mechanisms in use.
+- A hard refresh or private window connects fresh to the backend and reflects whatever state the backend holds.
+
+### Multi-User Findings
+- The system currently operates on **Global Simulation State**, NOT per-session or per-client state.
+- If Judge A clicks `START SIH 2026 DEMO`, Judge B opening the URL 60 seconds later will see Judge A's simulation at `01:00` with active faults.
+- If a judge closes their browser, the simulation continues running until the 420s or 600s duration elapses.
+
+### Existing Reset/Start APIs
+- `POST /api/simulation/start`: Resets simulator, starts mission.
+- `POST /api/simulation/demo`: Resets simulator, starts 420s SIH demo.
+- `POST /api/simulation/stop`: Stops running loop, marks mission ended in DB, clears faults.
+- `DELETE /api/simulation/faults`: Clears active faults only (does NOT stop simulation or reset time).
+- **Missing**: There is no dedicated `POST /api/simulation/reset` endpoint to return to a clean `STANDBY` state at `00:00` without starting a new run.
+
+### Recommended Fix
+To achieve the requirement where a fresh session opens in `STANDBY / READY` at `00:00` with manual start:
+
+1. **Backend Disconnection Teardown / Idle Auto-Stop** (`realtime.py` & `main.py`):
+   - When the last WebSocket disconnects (`len(connection_manager.connections) == 0`), initiate a graceful stop or auto-idle countdown (e.g., if 0 clients connected for >10 seconds, call `realtime_engine.stop()`).
+   - In `stop()`, explicitly call `self.simulator.reset()` so `mission_elapsed_sec` resets to `0.0`.
+2. **Dedicated Reset / Standby Endpoint**:
+   - Add `POST /api/simulation/reset` that stops any running loop, calls `self.simulator.reset()`, clears faults, sets `latest_payload = None`, and broadcasts `{"type": "state", "running": false, "mission_elapsed_sec": 0}`.
+3. **Frontend Standby Default Option** (or Session Isolation):
+   - For a single-engine presentation, provide a "Reset to Standby" action or have the demo page check if the user explicitly launched the demo. Alternatively, on initial load of `DemoPage`, if `!running`, guarantee the display shows clean `STANDBY` at `00:00`.
+
+### Files That Would Need Modification
+- `backend/app/services/realtime.py`: Auto-stop when zero connections remain; ensure `self.simulator.reset()` is called on `stop()`.
+- `backend/app/main.py`: Add `/api/simulation/reset` endpoint; notify `realtime_engine` on client disconnect.
+- `frontend/src/api/client.ts` & `frontend/src/context/TelemetryContext.tsx`: Wire `resetSimulation()` action.
+
+### Files That Must Remain Untouched
+- `backend/app/engine/*` (all physical engine simulation models)
+- `backend/app/analytics/*` (ML models, anomaly detection, diagnosis, health, RUL)
+- `frontend/src/components/3d/*` (`EngineScene.tsx`, `PistonEngineModel.tsx`)
+- All other page components (`DashboardPage.tsx`, `Analytics`, `CSV`, `Validation`, `Settings`)
+
+### Risk Assessment
+- **Risk of Immediate Auto-Stop on Disconnect**: If a judge refreshes the page, the WebSocket disconnects for 1-2 seconds. An immediate stop on disconnect would kill an in-progress demo on refresh. **Mitigation**: Use a grace period (e.g. 10–15 seconds) before shutting down the simulation if zero clients remain connected.
+- **Risk of Multi-Judge Conflict**: If two judges evaluate simultaneously on a shared backend, one judge resetting will interrupt the other. **Mitigation**: A shared session is acceptable if judges evaluate together, or a lightweight session token can be evaluated in a future phase.
+
+### Implementation Plan
+1. Step 1: Add `self.simulator.reset()` to `realtime_engine.stop()` in `realtime.py`.
+2. Step 2: Implement zero-client disconnect grace timer (e.g. 15s) in `realtime.py` / `main.py`.
+3. Step 3: Add `POST /api/simulation/reset` endpoint to `main.py`.
+4. Step 4: Expose "Reset to Standby" button or auto-reset option in the UI.
+
+IMPORTANT:
+No code was changed during this investigation.
+
+*Last updated by: SkySentrix Mission Session Inspection Agent — 2026-09-24*
