@@ -23,6 +23,7 @@ export function DemoPage() {
     startDemo,
     startMission,
     stopMission,
+    resetMission,
     injectFaultAction,
     clearAllFaultsAction,
     applyControls,
@@ -93,6 +94,15 @@ export function DemoPage() {
       notify('Engine shutdown complete')
     } catch {
       notify('Failed to stop engine')
+    }
+  }
+
+  const handleResetStandby = async () => {
+    try {
+      await resetMission()
+      notify('Engine reset to STANDBY (00:00)')
+    } catch {
+      notify('Failed to reset engine')
     }
   }
 
@@ -1032,6 +1042,21 @@ export function DemoPage() {
                   }}
                 >
                   RESET FAULTS
+                </button>
+                <button
+                  onClick={handleResetStandby}
+                  style={{
+                    background: 'var(--bg-card)',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--border-subtle)',
+                    padding: '3px 9px',
+                    borderRadius: 4,
+                    fontSize: 10,
+                    cursor: 'pointer',
+                  }}
+                  title="Reset global simulation to fresh Standby (00:00)"
+                >
+                  RESET DEMO
                 </button>
               </div>
             </div>

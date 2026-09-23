@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { wsUrl, getSimulationState, startSimulation, stopSimulation, startDemoScenario, injectFault, clearFault, clearAllFaults, updateManualControl } from '../api/client'
+import { wsUrl, getSimulationState, startSimulation, stopSimulation, resetSimulation, startDemoScenario, injectFault, clearFault, clearAllFaults, updateManualControl } from '../api/client'
 import type { PipelineFrame } from '../types'
 
 export interface NormalizedTelemetryState {
@@ -104,6 +104,7 @@ export interface TelemetryContextType {
   refreshSimulationState: () => Promise<void>
   startMission: (params: { mission_name: string; preset: string; duration_sec: number; demo_mode: boolean }) => Promise<any>
   stopMission: () => Promise<any>
+  resetMission: () => Promise<any>
   startDemo: () => Promise<any>
   injectFaultAction: (params: { fault_type: string; severity: number; progression_per_sec: number; sensor_name?: string }) => Promise<any>
   clearFaultAction: (fault_type: string) => Promise<any>
@@ -516,6 +517,24 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [refreshSimulationState])
 
+  const resetMission = useCallback(async () => {
+    try {
+      const res = await resetSimulation()
+      setRunning(false)
+      setCurrent(createNeutralTelemetryState())
+      setRawFrame(createNeutralPipelineFrame())
+      setHistory([])
+      await refreshSimulationState()
+      return res
+    } catch (err) {
+      setRunning(false)
+      setCurrent(createNeutralTelemetryState())
+      setRawFrame(createNeutralPipelineFrame())
+      setHistory([])
+      throw err
+    }
+  }, [refreshSimulationState])
+
   const startDemo = useCallback(async () => {
     const res = await startDemoScenario()
     setRunning(true)
@@ -563,6 +582,7 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         refreshSimulationState,
         startMission,
         stopMission,
+        resetMission,
         startDemo,
         injectFaultAction,
         clearFaultAction,

@@ -1246,3 +1246,77 @@ IMPORTANT:
 No code was changed during this investigation.
 
 *Last updated by: SkySentrix Mission Session Inspection Agent — 2026-09-24*
+
+---
+
+## MISSION SESSION LIFECYCLE FIX (2026-09-24)
+--------------------------------------------------
+
+### 1. Problem Statement
+When a new judge opened the public Vercel production URL (`https://skysentrix.vercel.app`), they could see an old demo session running midway through (e.g. at 03:15 with faults already triggered) instead of starting in a fresh `MISSION READY / STANDBY` state at `00:00`.
+
+### 2. Root Cause
+- **Singleton Backend Engine**: `realtime_engine = RealtimeEngine()` runs as a module-level singleton in `backend/app/main.py`.
+- **Autonomous Task Execution**: `POST /api/simulation/demo` and `/start` spawn an unattached background `asyncio` task (`_run_loop`) that continued executing for its full duration (420s / 600s) on Render even after all browser tabs were closed.
+- **Auto-Subscription on Connect**: New WebSocket connections to `/ws/telemetry` received the singleton's active state and immediately attached to the running stream.
+- **Absence of Teardown**: Closing a browser tab disconnected the WebSocket but did not stop the server-side simulation loop or reset engine time.
+
+### 3. Lifecycle Design & Implementation
+To guarantee clean demo starts without breaking multi-user evaluations or page refreshes:
+
+1. **15-Second Disconnection Grace Period**:
+   - `TelemetryConnectionManager` invokes an `on_zero_connections` callback whenever its connection count transitions from >0 to 0 (both upon normal client disconnect and when pruning stale/dead sockets during broadcast).
+   - `RealtimeEngine` schedules an asynchronous 15-second grace countdown timer (`_schedule_zero_connection_grace()`).
+   - If zero clients remain when the 15-second timer expires, `reset_to_standby()` is automatically called.
+
+2. **Reconnection Cancellation (Page Refresh Safe)**:
+   - If any client reconnects within the 15-second grace window (e.g. user refreshing the browser or momentary network drop), `_cancel_grace_timer()` immediately cancels the pending countdown.
+   - The mission continues running without interruption.
+
+3. **Session Generation Safety (Anti-Race Condition)**:
+   - `self._session_generation` is incremented on connection registration, mission start, and session reset.
+   - The scheduled timer checks `if current_gen == self._session_generation and len(self.connection_manager.connections) == 0` before triggering, ensuring stale timers never cancel or reset subsequent sessions.
+
+4. **Clean Standby Reset (`reset_to_standby()`)**:
+   - Safely cancels the active `_run_loop` task.
+   - Updates database mission status to ended if an active mission ID exists.
+   - Explicitly calls `self.simulator.reset()`, resetting `mission_elapsed_sec` back to `0.0`.
+   - Clears all active faults (`self.simulator.clear_all_faults()`).
+   - Resets digital twin telemetry cache (`self.latest_payload = None`).
+   - Sets `self.running = False` and increments session generation.
+   - Broadcasts a clean `{"type": "state", "running": false, "mission_elapsed_sec": 0.0, ...}` packet to all connected clients.
+
+5. **Existing `stop()` Semantics Preserved**:
+   - The existing `stop()` method remains completely untouched for the "STOP ENGINE" button, ensuring backward compatibility.
+
+6. **Dedicated Reset API & Frontend Controls**:
+   - Added `POST /api/simulation/reset` in `backend/app/main.py`.
+   - Added `resetSimulation()` in `frontend/src/api/client.ts`.
+   - Added `resetMission()` to `TelemetryContext.tsx`.
+   - Added a compact "RESET DEMO" operator button in `frontend/src/pages/DemoPage.tsx` next to "RESET FAULTS".
+
+### 4. Modified Files
+- `backend/app/services/realtime.py` (Grace timer, zero-connection lifecycle, standby reset, generation counter, connection register/unregister).
+- `backend/app/main.py` (`POST /api/simulation/reset` route, WebSocket connect/disconnect integration with lifecycle manager).
+- `frontend/src/api/client.ts` (`resetSimulation` API caller).
+- `frontend/src/context/TelemetryContext.tsx` (`resetMission` context method).
+- `frontend/src/pages/DemoPage.tsx` (Destructured `resetMission`, added `handleResetStandby`, added "RESET DEMO" button).
+
+### 5. Verification Results
+- **Frontend Build**: `npm run build` (`tsc -b && vite build`) passed with `Exit code 0` (1275 modules transformed, 0 TypeScript/lint errors).
+- **Backend Test Suite**: Verified 9 integration tests in `scratch/test_session_lifecycle.py` via Python 3.11 with all dependencies:
+  - Test A: Initial Standby state (running=False, elapsed=0.0) -> PASS
+  - Test B: Start mission lifecycle -> PASS
+  - Test C: Connect/disconnect with clients remaining keeps loop running -> PASS
+  - Test D: Disconnection to zero clients triggers 15s grace countdown -> PASS
+  - Test E: Reconnection within grace window cancels countdown -> PASS
+  - Test F: Grace expiry after 15s executes clean standby reset -> PASS
+  - Test G: `POST /api/simulation/reset` directly returns to standby -> PASS
+  - Test H: `stop()` preserves existing STOP ENGINE behavior -> PASS
+  - Test I: Stale socket pruning triggers zero-connection grace timer -> PASS
+
+### 6. Protected Unmodified Components
+- `backend/app/engine/*` (all thermodynamics, physics, and flight dynamics intact).
+- `backend/app/analytics/*` (all ML models, feature engineering, and inference intact).
+- `frontend/src/components/3d/*` (`EngineScene.tsx`, `PistonEngineModel.tsx` intact).
+- Dashboard and Mission Control charts, tables, and timelines intact.

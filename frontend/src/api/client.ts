@@ -47,6 +47,11 @@ export async function stopSimulation() {
   return data
 }
 
+export async function resetSimulation() {
+  const { data } = await api.post('/api/simulation/reset')
+  return data
+}
+
 export async function startDemoScenario() {
   const { data } = await api.post('/api/simulation/demo')
   return data

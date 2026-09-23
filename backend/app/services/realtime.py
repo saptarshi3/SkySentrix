@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional, Set
+from typing import Any, Callable, Dict, Optional, Set
 
 from fastapi import WebSocket
 
@@ -21,6 +21,7 @@ class TelemetryConnectionManager:
     def __init__(self) -> None:
         self.connections: Set[WebSocket] = set()
         self._lock = asyncio.Lock()
+        self.on_zero_connections: Optional[Callable[[], None]] = None
 
     async def connect(self, websocket: WebSocket) -> None:
         await websocket.accept()
@@ -31,6 +32,9 @@ class TelemetryConnectionManager:
         async with self._lock:
             if websocket in self.connections:
                 self.connections.remove(websocket)
+            empty = len(self.connections) == 0
+        if empty and self.on_zero_connections:
+            self.on_zero_connections()
 
     async def broadcast(self, payload: Dict[str, Any]) -> None:
         async with self._lock:
@@ -48,6 +52,9 @@ class TelemetryConnectionManager:
                 for ws in stale:
                     if ws in self.connections:
                         self.connections.remove(ws)
+                empty = len(self.connections) == 0
+            if empty and self.on_zero_connections:
+                self.on_zero_connections()
  
 
 class RealtimeEngine:
@@ -56,6 +63,7 @@ class RealtimeEngine:
         self.simulator = EngineSimulator()
         self.pipeline = DigitalTwinPipeline()
         self.connection_manager = TelemetryConnectionManager()
+        self.connection_manager.on_zero_connections = self._handle_zero_connections
 
         self.running = False
         self.loop_task: Optional[asyncio.Task] = None
@@ -65,6 +73,99 @@ class RealtimeEngine:
         self.demo_fault_stage = 0
         self.started_at: Optional[datetime] = None
         self._lock = asyncio.Lock()
+
+        # Session lifecycle / disconnect grace timer
+        self._grace_timer_task: Optional[asyncio.Task] = None
+        self._session_generation: int = 0
+        self._grace_period_sec: float = 15.0
+
+    def _cancel_pending_grace_timer(self) -> None:
+        """Cancel any pending disconnect standby-reset timer."""
+        self._session_generation += 1
+        if self._grace_timer_task is not None and not self._grace_timer_task.done():
+            logger.info("Cancelling pending disconnect grace timer")
+            self._grace_timer_task.cancel()
+            self._grace_timer_task = None
+
+    def _handle_zero_connections(self) -> None:
+        """Invoked when active WebSocket client count drops to zero."""
+        self._cancel_pending_grace_timer()
+
+        # Only trigger standby reset if the session is dirty (running, elapsed time > 0, or active faults)
+        is_dirty = self.running or self.simulator.mission_elapsed_sec > 0 or bool(self.simulator.fault_manager.active_faults)
+        if not is_dirty:
+            return
+
+        current_gen = self._session_generation
+        logger.info(
+            "Last client disconnected with active session (running=%s, elapsed=%.1fs). Starting %ss grace timer before standby reset.",
+            self.running,
+            self.simulator.mission_elapsed_sec,
+            self._grace_period_sec,
+        )
+
+        async def _grace_countdown(gen: int) -> None:
+            try:
+                await asyncio.sleep(self._grace_period_sec)
+                # Verify conditions after 15 seconds:
+                # 1. Generation unchanged (no client reconnected, no start/reset called)
+                # 2. Connection count is still 0
+                if gen == self._session_generation and len(self.connection_manager.connections) == 0:
+                    logger.info("Grace period (15s) expired with 0 active clients. Safely resetting simulator to standby.")
+                    await self.reset_to_standby()
+            except asyncio.CancelledError:
+                logger.info("Disconnect grace timer cancelled (client reconnected or session modified).")
+
+        self._grace_timer_task = asyncio.create_task(_grace_countdown(current_gen))
+
+    async def register_connection(self, websocket: WebSocket) -> None:
+        """Called when a new WebSocket connects. Cancels any pending idle reset timer."""
+        await self.connection_manager.connect(websocket)
+        self._cancel_pending_grace_timer()
+        logger.info("Client connected to telemetry. Active connections: %d", len(self.connection_manager.connections))
+
+    async def unregister_connection(self, websocket: WebSocket) -> None:
+        """Called when a WebSocket disconnects."""
+        await self.connection_manager.disconnect(websocket)
+        logger.info("Client disconnected from telemetry. Active connections remaining: %d", len(self.connection_manager.connections))
+
+    async def reset_to_standby(self) -> Dict[str, Any]:
+        """Safely resets the global simulator to clean standby state (00:00, no active faults)."""
+        logger.info("Resetting simulation to clean standby state")
+        self._cancel_pending_grace_timer()
+
+        # 1. Stop any active simulation loop
+        self.running = False
+        if self.loop_task is not None and not self.loop_task.done():
+            self.loop_task.cancel()
+            try:
+                await self.loop_task
+            except asyncio.CancelledError:
+                pass
+
+        # 2. End DB mission and reset pipeline
+        with SessionLocal() as db:
+            self.pipeline.end_mission(db)
+            self.pipeline.reset_state()
+
+        # 3. Clean simulator state to 00:00 / idle
+        self.simulator.reset()
+        self.simulator.clear_all_faults()
+        self.demo_mode = False
+        self.demo_fault_stage = 0
+        self.started_at = None
+        self.latest_payload = None
+
+        # 4. Broadcast clean state
+        state = self.get_state()
+        await self.connection_manager.broadcast({"type": "state", **state})
+
+        return {
+            "status": "ok",
+            "running": False,
+            "mission_elapsed_sec": 0.0,
+            "mode": "idle",
+        }
 
     async def _step_and_broadcast(self, dt: Optional[float] = None) -> Optional[Dict[str, Any]]:
         async with self._lock:
@@ -85,6 +186,7 @@ class RealtimeEngine:
             return payload
 
     async def start(self, mission_name: str, preset: str, duration_sec: int, demo_mode: bool) -> Dict[str, Any]:
+        self._cancel_pending_grace_timer()
         if self.running:
             await self.stop()
 

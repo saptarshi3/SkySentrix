@@ -174,9 +174,14 @@ async def api_clear_all_faults() -> dict:
     return await realtime_engine.clear_all_faults()
 
 
+@app.post("/api/simulation/reset")
+async def api_reset_simulation() -> dict:
+    return await realtime_engine.reset_to_standby()
+
+
 @app.websocket("/ws/telemetry")
 async def ws_telemetry(websocket: WebSocket) -> None:
-    await realtime_engine.connection_manager.connect(websocket)
+    await realtime_engine.register_connection(websocket)
     try:
         state = realtime_engine.get_state()
         await websocket.send_json({"type": "state", **state})
@@ -184,9 +189,9 @@ async def ws_telemetry(websocket: WebSocket) -> None:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        await realtime_engine.connection_manager.disconnect(websocket)
+        await realtime_engine.unregister_connection(websocket)
     except Exception:
-        await realtime_engine.connection_manager.disconnect(websocket)
+        await realtime_engine.unregister_connection(websocket)
 
 
 @app.get("/api/missions", response_model=list[MissionResponse])
