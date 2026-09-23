@@ -96,3 +96,8 @@ desktop.ini
 .coverage.*
 .pytest_cache/
 htmlcov/
+
+backend/data/
+backend/scripts/
+backend/artifacts/
+backend/validation_results/
