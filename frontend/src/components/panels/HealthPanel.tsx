@@ -51,6 +51,30 @@ function SubsystemBar({ name, value }: { name: string; value: number }) {
   )
 }
 
+/** Small chip for anomaly contributors / evidence items */
+function SignalChip({ label, value, highlight }: { label: string; value?: string; highlight?: boolean }) {
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '3px 7px', borderRadius: 4, marginBottom: 3,
+      background: highlight ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.04)',
+      border: `1px solid ${highlight ? 'rgba(239,68,68,0.22)' : 'var(--border-subtle)'}`,
+    }}>
+      <span style={{
+        fontSize: 9.5, color: highlight ? 'var(--red-400)' : 'var(--text-secondary)',
+        fontWeight: 600, textTransform: 'capitalize',
+      }}>{label.replaceAll('_', ' ')}</span>
+      {value !== undefined && (
+        <span style={{
+          fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 700,
+          color: highlight ? 'var(--red-400)' : 'var(--text-muted)',
+          marginLeft: 6, flexShrink: 0,
+        }}>{value}</span>
+      )}
+    </div>
+  )
+}
+
 export function HealthPanel({ frame }: HealthPanelProps) {
   const health = frame?.health
   const diagnosis = frame?.diagnosis
@@ -71,6 +95,16 @@ export function HealthPanel({ frame }: HealthPanelProps) {
   const faultDisplay = faultName.replaceAll('_', ' ')
 
   const subsystems = health?.subsystem_health as Record<string, number> | undefined
+
+  // Evidence entries sorted by magnitude descending
+  const evidenceEntries = diagnosis?.evidence
+    ? Object.entries(diagnosis.evidence)
+        .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
+        .slice(0, 4)
+    : []
+
+  // Anomaly contributors
+  const contributors = anomaly?.contributing_parameters?.slice(0, 4) ?? []
 
   // Maintenance tasks from backend-provided info + advisory level
   const tasks = [
@@ -152,9 +186,33 @@ export function HealthPanel({ frame }: HealthPanelProps) {
               ))}
             </div>
           )}
+
+          {/* Change 3: Fault prediction — contributing evidence */}
+          {isAnomalous && evidenceEntries.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                color: 'var(--red-400)', marginBottom: 5,
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                Contributing Evidence
+              </div>
+              {evidenceEntries.map(([key, val]) => (
+                <SignalChip
+                  key={key}
+                  label={key}
+                  value={typeof val === 'number' ? val.toFixed(3) : String(val)}
+                  highlight={Math.abs(val as number) > 0.3}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* AI INSIGHTS */}
+        {/* AI INSIGHTS — Change 4: Expanded panel */}
         <div className="right-panel-section">
           <div className="panel-title-icon" style={{ marginBottom: 8 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" strokeWidth="2">
@@ -164,58 +222,163 @@ export function HealthPanel({ frame }: HealthPanelProps) {
             </svg>
             <span className="panel-title">AI Predictive Insights</span>
           </div>
-          <div className="ai-insight-box">
-            <div className="ai-insight-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M9 18.5H5a2 2 0 01-2-2v-7a2 2 0 012-2h14a2 2 0 012 2v7a2 2 0 01-2 2h-4"/>
-                <polyline points="9 11 12 14 15 11"/>
-                <path d="M12 14V6"/>
-              </svg>
+
+          {/* Assessment text */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)',
+            borderRadius: 6, padding: '8px 10px', marginBottom: 8,
+          }}>
+            <div style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+              color: 'var(--text-muted)', marginBottom: 4,
+            }}>Current Assessment</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+              {diagnosis?.explanation
+                ? diagnosis.explanation
+                : 'Engine operating normally. All parameters within expected operating range.'}
             </div>
-            <div style={{ flex: 1 }}>
-              <div className="ai-insight-text">
-                {diagnosis?.explanation
-                  ? diagnosis.explanation
-                  : 'Engine operating normally. All parameters within expected operating range.'}
+            {!isAnomalous && (
+              <div className="ai-insight-ok" style={{ marginTop: 6 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                No immediate action required
               </div>
-              {!isAnomalous && (
-                <div className="ai-insight-ok">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  No immediate action required
-                </div>
-              )}
-              {isAnomalous && diagnosis?.contributing_parameters && diagnosis.contributing_parameters.length > 0 && (
-                <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                  {diagnosis.contributing_parameters.slice(0, 3).map(p => (
-                    <span key={p} style={{
-                      fontSize: 9, padding: '1px 5px', borderRadius: 2,
-                      background: 'var(--amber-900)', border: '1px solid rgba(245,158,11,0.25)',
-                      color: 'var(--amber-400)', fontWeight: 600, textTransform: 'capitalize'
-                    }}>{p.replaceAll('_', ' ')}</span>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Anomaly score */}
-          {anomaly && (
-            <div style={{ marginTop: 8 }}>
+          {/* Confidence bar (only when anomalous) */}
+          {isAnomalous && diagnosis?.confidence !== undefined && (
+            <div style={{ marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-                <span style={{ fontSize: 9.5, color: 'var(--text-muted)', fontWeight: 600 }}>ANOMALY SCORE</span>
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                  Diagnosis Confidence
+                </span>
+                <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--amber-400)' }}>
+                  {(diagnosis.confidence * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div style={{ height: 4, background: 'var(--bg-card)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{
+                  width: `${diagnosis.confidence * 100}%`, height: '100%', borderRadius: 2, transition: 'width 0.4s ease',
+                  background: diagnosis.confidence > 0.75 ? 'var(--red-500)'
+                    : diagnosis.confidence > 0.5 ? 'var(--amber-500)' : 'var(--green-500)',
+                }} />
+              </div>
+            </div>
+          )}
+
+          {/* Change 2: Anomaly Score + WHY THIS SCORE? */}
+          {anomaly && (
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Anomaly Score</span>
                 <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   {(anomaly.score * 100).toFixed(1)}%
                 </span>
               </div>
-              <div style={{ height: 3, background: 'var(--bg-card)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ height: 4, background: 'var(--bg-card)', borderRadius: 2, overflow: 'hidden', marginBottom: 6 }}>
                 <div style={{
                   width: `${anomaly.score * 100}%`, height: '100%', borderRadius: 2, transition: 'width 0.4s ease',
                   background: anomaly.level === 'CRITICAL' ? 'var(--red-500)'
                     : anomaly.level === 'WARNING' ? 'var(--amber-500)' : 'var(--green-500)'
                 }} />
               </div>
+
+              {/* WHY THIS SCORE? */}
+              {contributors.length > 0 && (
+                <div>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                    color: anomaly.level !== 'NORMAL' ? 'var(--amber-400)' : 'var(--text-muted)',
+                    marginBottom: 4,
+                  }}>
+                    Why this score?
+                  </div>
+                  {contributors.map(p => (
+                    <SignalChip
+                      key={p}
+                      label={p}
+                      highlight={anomaly.level === 'CRITICAL'}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Subsystem key signals (from subsystem_health when running) */}
+          {subsystems && state !== 'STANDBY' && (
+            <div style={{ marginBottom: 8 }}>
+              <div style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                color: 'var(--text-muted)', marginBottom: 4,
+              }}>Key Subsystem Signals</div>
+              {Object.entries(subsystems)
+                .filter(([k]) => k !== 'overall')
+                .map(([k, v]) => {
+                  const pct = typeof v === 'number' ? v : 0
+                  return (
+                    <SignalChip
+                      key={k}
+                      label={k}
+                      value={`${pct.toFixed(0)}%`}
+                      highlight={pct < 60}
+                    />
+                  )
+                })}
+            </div>
+          )}
+
+          {/* Maintenance advisory */}
+          {maintenance && maintenance.message && (
+            <div style={{
+              padding: '6px 8px', borderRadius: 5, marginBottom: 8,
+              background: maintenance.level === 'CRITICAL' ? 'rgba(239,68,68,0.08)'
+                : maintenance.level === 'WARNING' ? 'rgba(245,158,11,0.08)' : 'rgba(34,197,94,0.06)',
+              border: `1px solid ${
+                maintenance.level === 'CRITICAL' ? 'rgba(239,68,68,0.2)'
+                : maintenance.level === 'WARNING' ? 'rgba(245,158,11,0.2)' : 'rgba(34,197,94,0.15)'}`,
+            }}>
+              <div style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                color: maintenance.level === 'CRITICAL' ? 'var(--red-400)'
+                  : maintenance.level === 'WARNING' ? 'var(--amber-400)' : 'var(--green-400)',
+                marginBottom: 3,
+              }}>Recommended Action</div>
+              <div style={{ fontSize: 10, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                {maintenance.message}
+              </div>
+            </div>
+          )}
+
+          {/* RUL context */}
+          {rul && state !== 'STANDBY' && (
+            <div style={{
+              padding: '6px 8px', borderRadius: 5,
+              background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)',
+            }}>
+              <div style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                color: 'var(--blue-400)', marginBottom: 4,
+              }}>RUL Context</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                <span style={{ fontSize: 9.5, color: 'var(--text-muted)' }}>Remaining Useful Life</span>
+                <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                  {rul.current_rul_hours.toFixed(0)} h
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                <span style={{ fontSize: 9.5, color: 'var(--text-muted)' }}>Trend</span>
+                <span style={{ fontSize: 9.5, fontWeight: 600, textTransform: 'capitalize',
+                  color: rul.trend === 'stable' ? 'var(--green-400)' : rul.trend === 'degrading' ? 'var(--red-400)' : 'var(--amber-400)',
+                }}>
+                  {rul.trend}
+                </span>
+              </div>
+              {rul.note && (
+                <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 3, lineHeight: 1.45 }}>{rul.note}</div>
+              )}
             </div>
           )}
         </div>

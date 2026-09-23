@@ -32,6 +32,24 @@ function MiniSparkline({ values, color }: { values: number[]; color: string }) {
   )
 }
 
+function DeviationBadge({ pct }: { pct: number | undefined }) {
+  if (pct === undefined) return null
+  const abs = Math.abs(pct)
+  const sign = pct > 0 ? '+' : ''
+  const color = abs <= 5 ? '#22c55e' : abs <= 15 ? '#f59e0b' : '#ef4444'
+  const bg = abs <= 5 ? 'rgba(34,197,94,0.1)' : abs <= 15 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.12)'
+  return (
+    <span style={{
+      fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 700,
+      color, background: bg, border: `1px solid ${color}40`,
+      borderRadius: 3, padding: '1px 4px', marginLeft: 4, flexShrink: 0,
+      letterSpacing: '0.02em',
+    }}>
+      {sign}{pct.toFixed(1)}%
+    </span>
+  )
+}
+
 function SensorRow({
   icon,
   name,
@@ -40,6 +58,7 @@ function SensorRow({
   status,
   history,
   valueColor,
+  devPct,
 }: {
   icon: React.ReactNode
   name: string
@@ -48,6 +67,7 @@ function SensorRow({
   status: 'green' | 'amber' | 'red' | 'orange' | 'neutral'
   history: number[]
   valueColor?: string
+  devPct?: number
 }) {
   const dotClass = status === 'green' ? 'dot-green'
     : status === 'amber' ? 'dot-amber'
@@ -63,11 +83,12 @@ function SensorRow({
       <div className="sensor-icon">{icon}</div>
       <div className="sensor-info">
         <div className="sensor-name">{name}</div>
-        <div className="sensor-reading">
+        <div className="sensor-reading" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
           <span className={`sensor-value sensor-value-${status}`} style={valueColor ? { color: valueColor } : undefined}>
             {value}
           </span>
           <span className="sensor-unit">{unit}</span>
+          <DeviationBadge pct={devPct} />
         </div>
       </div>
       <MiniSparkline values={history} color={sparkColor} />
@@ -145,8 +166,10 @@ function getSensorStatus(name: string, value: number): 'green' | 'amber' | 'red'
   }
 }
 
+
 export function SensorPanel({ frame, history }: SensorPanelProps) {
   const t = frame?.telemetry
+  const residuals = frame?.residuals
 
   const hist = useMemo(() => ({
     rpm: history.map(f => f.telemetry.rpm),
@@ -182,6 +205,7 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
           unit="RPM"
           status={t ? getSensorStatus('rpm', t.rpm) : 'neutral'}
           history={hist.rpm}
+          devPct={residuals?.rpm?.residual_pct}
         />
         <SensorRow
           icon={icons.manifold}
@@ -190,6 +214,7 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
           unit="kPa"
           status={t ? 'orange' : 'neutral'}
           history={hist.manifold}
+          devPct={residuals?.manifold_pressure?.residual_pct}
         />
         <SensorRow
           icon={icons.fuel}
@@ -198,6 +223,7 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
           unit="L/h"
           status={t ? 'orange' : 'neutral'}
           history={hist.fuel}
+          devPct={residuals?.fuel_flow?.residual_pct}
         />
         <SensorRow
           icon={icons.flame}
@@ -206,6 +232,7 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
           unit="°C"
           status={t ? getSensorStatus('egt', t.egt) : 'neutral'}
           history={hist.egt}
+          devPct={residuals?.egt?.residual_pct}
         />
         <SensorRow
           icon={icons.temp}
@@ -214,6 +241,7 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
           unit="°C"
           status={t ? getSensorStatus('cht', t.cht) : 'neutral'}
           history={hist.cht}
+          devPct={residuals?.cht?.residual_pct}
         />
         <SensorRow
           icon={icons.pressure}
@@ -222,6 +250,7 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
           unit="PSI"
           status={t ? getSensorStatus('oil_pressure', t.oil_pressure) : 'neutral'}
           history={hist.oil_pressure}
+          devPct={residuals?.oil_pressure?.residual_pct}
         />
         <SensorRow
           icon={icons.oil}
@@ -230,6 +259,7 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
           unit="°C"
           status={t ? getSensorStatus('oil_temp', t.oil_temp) : 'neutral'}
           history={hist.oil_temp}
+          devPct={residuals?.oil_temp?.residual_pct}
         />
         <SensorRow
           icon={icons.vibration}
@@ -238,6 +268,7 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
           unit="mm/s"
           status={t ? getSensorStatus('vibration', t.vibration) : 'neutral'}
           history={hist.vibration}
+          devPct={residuals?.vibration?.residual_pct}
         />
         <SensorRow
           icon={icons.battery}
@@ -246,6 +277,7 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
           unit="V"
           status={t ? getSensorStatus('battery', t.battery_voltage) : 'neutral'}
           history={hist.battery}
+          devPct={residuals?.battery_voltage?.residual_pct}
         />
 
         {/* Mode & efficiency */}
@@ -271,3 +303,4 @@ export function SensorPanel({ frame, history }: SensorPanelProps) {
     </div>
   )
 }
+
