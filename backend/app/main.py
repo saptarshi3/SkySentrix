@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Optional
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
@@ -35,10 +36,28 @@ app = FastAPI(
     description="Synthetic digital twin prototype for aero-piston engine analytics.",
 )
 
+# Environment-configurable CORS origins
+cors_env = os.getenv("CORS_ORIGINS", os.getenv("ALLOWED_ORIGINS", "")).strip()
+cors_allow_all = os.getenv("CORS_ALLOW_ALL", "true").lower() in ("1", "true", "yes")
+
+if cors_env:
+    allowed_origins = [orig.strip() for orig in cors_env.split(",") if orig.strip()]
+elif cors_allow_all:
+    allowed_origins = ["*"]
+else:
+    allowed_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+    ]
+
+# When wildcard '*' is allowed, allow_credentials must be False per CORS specification
+allow_creds = "*" not in allowed_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=allow_creds,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -58,6 +77,16 @@ def _safe_parse_json(raw: Optional[str], fallback):
 @app.on_event("startup")
 def on_startup() -> None:
     crud.init_db()
+
+
+@app.get("/health")
+def root_health() -> dict:
+    """Standard deployment health check endpoint for cloud platforms (e.g. Render)."""
+    return {
+        "status": "healthy",
+        "service": "SkySentrix Backend",
+        "version": "0.1.0",
+    }
 
 
 @app.get("/api/health")

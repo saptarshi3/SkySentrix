@@ -1,8 +1,9 @@
 import { useState } from 'react'
+import { wsUrl as defaultWsUrl } from '../api/client'
 
 export function SettingsPage() {
   const [theme, setTheme] = useState('aerospace_dark')
-  const [wsUrl, setWsUrl] = useState('ws://localhost:8000/ws/telemetry')
+  const [wsUrl, setWsUrl] = useState(defaultWsUrl)
   const [refreshRate, setRefreshRate] = useState(10)
   const [soundAlerts, setSoundAlerts] = useState(true)
   const [autoRotate, setAutoRotate] = useState(false)

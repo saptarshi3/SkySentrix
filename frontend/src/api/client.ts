@@ -1,14 +1,16 @@
 import axios from 'axios'
 import type { Mission, MissionTelemetryRow, ValidationResult } from '../types'
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const rawApiBase = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').trim()
+const API_BASE = rawApiBase.replace(/\/+$/, '')
 
 export const api = axios.create({
   baseURL: API_BASE,
   timeout: 30000,
 })
 
-export const wsUrl = `${API_BASE.replace('http://', 'ws://').replace('https://', 'wss://')}/ws/telemetry`
+const defaultWsUrl = `${API_BASE.replace(/^http:\/\//i, 'ws://').replace(/^https:\/\//i, 'wss://')}/ws/telemetry`
+export const wsUrl = (import.meta.env.VITE_WS_URL ? String(import.meta.env.VITE_WS_URL).trim() : defaultWsUrl)
 
 export async function fetchPresets() {
   const { data } = await api.get('/api/mission-presets')
