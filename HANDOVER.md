@@ -1061,3 +1061,87 @@ Restructured into clearly labeled sub-sections:
 3. If preview looks good: merge `dashboard-ui-tweaks` → `main` via PR. Vercel auto-deploys production.
 
 *Last updated by: Dashboard Frontend UI Tweaks Agent — 2026-09-24*
+
+--------------------------------------------------
+## DASHBOARD GRAPH REPAIR
+--------------------------------------------------
+
+### Bug
+The four Dashboard trend graphs (RPM Trend, EGT Trend, Vibration Trend, and Health Score History) were visually compressed with tiny plotting areas, overlapping x-axis labels, overlapping/clipped y-axis labels, and bar charts squashed into narrow strips.
+
+### Root Cause
+1. **Container Dimension Collapse**: The parent `.analytics-row` had a fixed height of only 180px (and down to 140px in media queries), leaving `.chart-body` with ~140px. Inside `.chart-body`, `<ReactECharts>` relied on `{ height: '100%', width: '100%' }` inside a flex container with no explicit height, causing ECharts on initial mount to measure uninitialized/collapsed dimensions and fixate on a tiny canvas.
+2. **Missing `containLabel: true`**: The ECharts grid lacked `containLabel: true` with a rigid `left: 44` / `bottom: 24` margin, leading to clipped y-axis values and overflow on narrow responsive widths.
+3. **X-Axis Overcrowding & Overlap**: Long 8-character timestamps (`HH:MM:SS`) combined with a naive `labels.length / 4` interval forced up to 5 overlapping timestamps into a narrow ~160px width with no collision handling.
+4. **Y-Axis Tick Density**: Lack of `splitNumber` control caused default 5+ tick lines in a tight vertical space, compressing labels against one another.
+5. **Health Score Bar Thinning**: 80 category bars forced into 150px compressed bars to subpixel/1px hairlines.
+
+### Graphs Fixed
+- **RPM Trend**: Actual (orange solid) and Baseline (gray dashed) with linear area gradient.
+- **EGT Trend (Avg)**: Actual and Baseline curves with readable axes.
+- **Vibration Trend**: Live vibration actual vs baseline curve.
+- **Health Score History**: Green/amber/red vertical health bars with rounded tops and clear percentage scale.
+
+### Files Modified
+- `frontend/src/components/ui/TrendCharts.tsx`
+- `frontend/src/index.css`
+
+### Data Source Preserved
+- No fake or hardcoded data introduced.
+- Uses existing `history` slice from `TelemetryContext` (`useTelemetry()`).
+- Live updates, timestamps, and actual/baseline values preserved 100%.
+
+### Rendering Fix
+1. **Container Layout & CSS**:
+   - Increased `.analytics-row` to `220px` height on desktop (`200px` at ≤1200px, `180px` at ≤960px).
+   - Styled `.chart-body` with `position: relative; width: 100%; height: 100%; min-height: 160px;`.
+   - Styled `<ReactECharts>` with absolute positioning (`position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%'`) ensuring rock-solid container measurement that cannot collapse to 0 or 100x100.
+2. **Resize Synchronization**:
+   - Attached instance refs to all 4 charts with `onChartReady={(inst) => inst.resize()}` and a multi-timer + window `resize` event listener in `useEffect`.
+3. **Axis & Grid Tuning**:
+   - Added `containLabel: true` to ECharts `grid` (`top: 28, right: 12, bottom: 24, left: 10`) ensuring all labels are fully contained without clipping.
+   - Formatted x-axis labels concisely as `mm:ss` (5 characters).
+   - Set controlled tick interval showing start, midpoint, and end timestamps with `showMinLabel: true`, `showMaxLabel: true`, and `hideOverlap: true`.
+   - Set `splitNumber: 3` on yAxis across all charts to prevent vertical tick crowding.
+4. **Health Score Bars**:
+   - Sliced recent 35 points for health score bars, ensuring bars maintain healthy ~5-8px width with `barMaxWidth: 8` and `barGap: '20%'`.
+
+### Existing Dashboard Features Preserved
+- [x] Sensor deviations (green/amber/red `%` badges) preserved.
+- [x] Anomaly "Why this score?" subsection preserved.
+- [x] Fault prediction contributing evidence preserved.
+- [x] AI Predictive Insights (assessment, confidence bar, subsystem signals, advisory, RUL) preserved.
+- [x] 3D Digital Twin engine (Lycoming IO-360 model, animations, camera presets, controls) preserved.
+- [x] Backend and API routes preserved (100% untouched).
+- [x] Other pages (Live Demo, Mission, Analytics, CSV, Validation, Archive, Settings) preserved.
+
+### Validation
+- **TypeScript & Build**: `tsc -b && vite build` passed with exit code 0 (`1275 modules transformed in 6.6s`).
+- **Linter/Test**: No lint or test scripts configured in `package.json`.
+
+### Runtime Verification
+- Verified on local headless Chromium against production-like build on Vite preview.
+- Tested with live streaming simulation frames over WebSocket from `https://skysentrix.onrender.com`.
+- Confirmed all four graphs render at full size, lines and bars are distinct, axes readable, zero overlapping labels, zero console errors.
+
+### Responsive Verification
+Confirmed clean rendering, proper proportions, and no card overflow across:
+- **1920×1080**: Full desktop layout, 4 spacious cards across bottom row.
+- **1600×900**: Fully scaled, legible axes, clean spacing.
+- **1440×900**: No overlapping text, proper plotting area.
+- **1366×768**: Small desktop layout, responsive chart heights, perfect legibility.
+
+### Known Issues
+None.
+
+### Git Checkpoint
+- Tag: `dashboard-chartfix-before` (created before edits)
+- Tag: `dashboard-before-ui-tweaks` (preserved)
+- Tag: `mission-control-ui-before-redesign` (preserved)
+
+### Next Steps
+1. Push branch `dashboard-ui-tweaks` to GitHub.
+2. Verify on Vercel preview deployment.
+3. Merge `dashboard-ui-tweaks` into `main` for production rollout.
+
+*Last updated by: Dashboard Graph Repair Agent — 2026-09-24*
