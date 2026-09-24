@@ -80,6 +80,7 @@ def on_startup() -> None:
 
 
 @app.get("/health")
+@app.head("/health")
 def root_health() -> dict:
     """Standard deployment health check endpoint for cloud platforms (e.g. Render)."""
     return {
